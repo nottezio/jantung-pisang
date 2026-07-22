@@ -76,6 +76,37 @@ function reportLoadFailure(err) {
 
 /* ── Chrome ─────────────────────────────────────────────────── */
 
+/* Theme: auto → light → dark. Stored locally, not in Firestore —
+   it is a property of the device, not the account. The iPad in the
+   ward and the laptop at home want different answers. */
+const THEMES = ['auto', 'light', 'dark'];
+const THEME_LABEL = { auto: '🌗', light: '☀️', dark: '🌙' };
+
+function applyTheme(mode) {
+  if (mode === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', mode);
+}
+
+function wireTheme() {
+  let mode = 'auto';
+  try { mode = localStorage.getItem('ptracker-theme') || 'auto'; } catch {}
+  if (!THEMES.includes(mode)) mode = 'auto';
+  applyTheme(mode);
+
+  const btn = document.createElement('button');
+  btn.className = 'btn-sm btn-ghost';
+  btn.title = 'Ganti tema';
+  btn.setAttribute('aria-label', 'Ganti tema');
+  btn.textContent = THEME_LABEL[mode];
+  btn.addEventListener('click', () => {
+    mode = THEMES[(THEMES.indexOf(mode) + 1) % THEMES.length];
+    applyTheme(mode);
+    btn.textContent = THEME_LABEL[mode];
+    try { localStorage.setItem('ptracker-theme', mode); } catch {}
+  });
+  document.querySelector('.topbar .spacer')?.after(btn);
+}
+
 function wireChrome() {
   $('#year').textContent = String(new Date().getFullYear());
   $('#versionTag').textContent = APP_VERSION;   // visible build, requirement #9
@@ -96,6 +127,7 @@ function setSignedIn(on) {
 
 async function boot() {
   wireChrome();
+  wireTheme();
   watchConnectivity();
 
   // Layer 1 of 3 offline layers. Registration failure is not

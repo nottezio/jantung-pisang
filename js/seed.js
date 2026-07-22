@@ -22,116 +22,52 @@ export const SEED_SECTIONS = [
     key: 'subjective',
     label: 'S — Subjektif',
     type: 'bullets',
-    config: { placeholder: 'Keluhan…' },
+    config: { placeholder: 'Sesak berkurang\nNyeri dada tidak ada' },
   },
   {
     key: 'riskFactors',
     label: 'Faktor risiko kardiovaskular',
-    type: 'fixed-items',
+    type: 'text',
     config: {
-      statusOptions: ['(+)', '(-)', 'tidak diketahui'],
-      items: [
-        { key: 'hipertensi',  label: 'Hipertensi' },
-        { key: 'dm',          label: 'Diabetes Melitus' },
-        { key: 'dislipidemia',label: 'Dislipidemia' },
-        { key: 'merokok',     label: 'Merokok' },
-      ],
+      default: 'Riwayat Hipertensi \nRiwayat Diabetes Melitus \nRiwayat Dislipidemia \nRiwayat Merokok ',
     },
   },
   {
     key: 'vitals',
-    label: 'Tanda vital',
-    type: 'keyvalue',
+    label: 'O — Tanda vital',
+    type: 'text',
     config: {
-      fields: [
-        { key: 'consciousness', label: 'Kesadaran', default: 'Sakit sedang / Compos mentis / Gizi cukup' },
-        { key: 'bp',    label: 'Tekanan Darah', inputMode: 'numeric', placeholder: '120/80', suffix: 'mmHg' },
-        { key: 'hr',    label: 'Nadi',          inputMode: 'numeric', suffix: 'kali/menit' },
-        { key: 'rhythm',label: 'Irama nadi',    placeholder: 'reguler / ireguler' },
-        { key: 'rr',    label: 'Pernapasan',    inputMode: 'numeric', suffix: 'kali/menit' },
-        { key: 'temp',  label: 'Suhu',          inputMode: 'decimal', suffix: '°C' },
-        { key: 'spo2',  label: 'SpO2',          inputMode: 'numeric', suffix: '%' },
-        { key: 'support',label:'Alat bantu O2',  placeholder: 'udara bebas / NK 3 lpm' },
-      ],
+      default: 'Compos mentis\nTekanan Darah : \nNadi : \nPernapasan : \nSuhu : \nSpO2 : ',
     },
   },
   {
     key: 'exam',
     label: 'Pemeriksaan fisik',
-    type: 'lines',
+    type: 'text',
     config: {
-      showLabel: true,
-      lines: [
-        { key: 'kepala',  label: 'Kepala' },
-        { key: 'thorax',  label: 'Thorax' },
-        { key: 'cor',     label: 'Cor' },
-        { key: 'pulmo',   label: 'Pulmo' },
-        { key: 'abdomen', label: 'Abdomen' },
-        { key: 'ekstremitas', label: 'Ekstremitas' },
-      ],
-    },
-  },
-  {
-    key: 'anthro',
-    label: 'Antropometri',
-    type: 'keyvalue',
-    config: {
-      fields: [
-        { key: 'weight', label: 'Berat badan', inputMode: 'decimal', suffix: 'kg' },
-        { key: 'height', label: 'Tinggi badan', inputMode: 'decimal', suffix: 'cm' },
-      ],
+      default: 'Kepala : \nThorax : \nCor : \nPulmo : \nAbdomen : \nEkstremitas : ',
     },
   },
   {
     key: 'investigations',
     label: 'Pemeriksaan penunjang',
     type: 'dated-repeat',
-    // Virtual: nothing is stored on the entry. The entry holds
-    // includedInvestigationIds; the master list lives on the
-    // patient. Hard requirement #4.
     config: {},
-  },
-  {
-    key: 'riskStratification',
-    label: 'Stratifikasi risiko',
-    type: 'formula',
-    config: {
-      options: [
-        { value: 'rcri_low',  label: 'Lee RCRI — risiko rendah',
-          sentence: 'Lee RCRI: risiko rendah (< 1%)' },
-        { value: 'rcri_high', label: 'Lee RCRI — risiko tinggi',
-          sentence: 'Lee RCRI: risiko tinggi (≥ 1%)' },
-        { value: 'icos_low',  label: 'HFA-ICOS — risiko rendah',
-          sentence: 'HFA-ICOS: risiko rendah' },
-        { value: 'icos_med',  label: 'HFA-ICOS — risiko sedang',
-          sentence: 'HFA-ICOS: risiko sedang' },
-        { value: 'icos_high', label: 'HFA-ICOS — risiko tinggi',
-          sentence: 'HFA-ICOS: risiko tinggi' },
-      ],
-    },
   },
   { key: 'assessment', label: 'A — Assessment', type: 'bullets', config: {} },
   { key: 'therapy',    label: 'T — Terapi',     type: 'bullets', config: {} },
   { key: 'plan',       label: 'P — Plan',       type: 'bullets', config: {} },
   {
     key: 'tsBlocks',
-    label: 'Blok TS (konsul)',
-    type: 'sub-blocks',
-    config: {
-      titleKey: 'dept',
-      titleLabel: 'Departemen',
-      lists: [
-        { key: 'assessment', label: 'A' },
-        { key: 'plan',       label: 'P' },
-        { key: 'therapy',    label: 'T' },
-      ],
-    },
+    label: 'TS lain (opsional)',
+    type: 'text',
+    config: { placeholder: 'TS Penyakit Dalam\nA/ …\nP/ …\nT/ …' },
   },
   {
     key: 'closing',
     label: 'Penutup',
     type: 'text',
-    config: { placeholder: 'Mohon arahan dan koreksinya dokter. Terima kasih.' },
+    config: { default: 'Mohon arahan dan koreksinya dokter. Terima kasih.' },
   },
 ];
 
@@ -154,25 +90,15 @@ _{{contextSentence}}_
 {{/subjective}}
 
 *Faktor risiko kardiovaskular:*
-{{#riskFactors}}
-- Riwayat {{label}} {{status}}{{#detail}}, {{detail}}{{/detail}}
-{{/riskFactors}}
+{{riskFactors}}
 
 *O:*
-{{vitals.consciousness}}
-Tekanan Darah : {{vitals.bp}} mmHg
-Nadi : {{vitals.hr}} kali/menit{{#vitals.rhythm}}, {{vitals.rhythm}}{{/vitals.rhythm}}
-Pernapasan : {{vitals.rr}} kali/menit
-Suhu : {{vitals.temp}} derajat Celcius
-SpO2 : {{vitals.spo2}}% {{vitals.support}}
+{{vitals}}
 
-{{#exam}}
-{{.}}
-{{/exam}}
-
-{{#anthro.weight}}BB {{anthro.weight}} kg{{/anthro.weight}}
-{{#anthro.height}}TB {{anthro.height}} cm{{/anthro.height}}
-{{#patient.insurance}}{{patient.insurance}}{{/patient.insurance}}
+{{exam}}
+{{#patient.insurance}}
+{{patient.insurance}}
+{{/patient.insurance}}
 
 {{#investigations}}
 *{{type}}{{#subtype}} {{subtype}}{{/subtype}}{{#location}} {{location}}{{/location}} ({{date}})*
@@ -180,10 +106,6 @@ SpO2 : {{vitals.spo2}}% {{vitals.support}}
 {{/values}}{{#content}}{{content}}{{/content}}
 
 {{/investigations}}
-{{#riskStratification}}
-*_{{riskStratification}}_*
-
-{{/riskStratification}}
 *Mohon izin pasien kami assess dengan :*
 {{#assessment}}
 - {{.}}
@@ -200,16 +122,7 @@ SpO2 : {{vitals.spo2}}% {{vitals.support}}
 {{/plan}}
 
 {{#tsBlocks}}
-*TS {{dept}}*
-A/
-{{#assessment}}- {{.}}
-{{/assessment}}
-P/
-{{#plan}}- {{.}}
-{{/plan}}
-T/
-{{#therapy}}- {{.}}
-{{/therapy}}
+{{tsBlocks}}
 
 {{/tsBlocks}}
 {{closing}}`;

@@ -73,6 +73,36 @@ export function formatDateID(iso, withDay = false) {
   const base = `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
   return withDay ? `${HARI[d.getDay()]}, ${base}` : base;
 }
+/** Parse a date the way a person types one under time pressure.
+    Accepts 14/3/1968 · 14-03-1968 · 14031968 · 1968-03-14.
+    The native date picker is precise and slow; this is neither
+    ambiguous nor slow, because day-first is unambiguous here:
+    a four-digit leading group can only be a year. */
+export function parseFlexibleDate(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  const p = n => String(n).padStart(2, '0');
+
+  let m = raw.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  if (m) return `${m[1]}-${p(m[2])}-${p(m[3])}`;
+
+  m = raw.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+  if (m) return `${m[3]}-${p(m[2])}-${p(m[1])}`;
+
+  m = raw.replace(/\D/g, '').match(/^(\d{2})(\d{2})(\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+
+  return '';
+}
+
+/** Render an ISO date back into the day-first form people type. */
+export function toTypedDate(iso) {
+  const d = parseDate(iso);
+  if (!d) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
 export const shiftDays = (iso, n) => {
   const d = parseDate(iso); if (!d) return '';
   d.setDate(d.getDate() + n); return isoDate(d);

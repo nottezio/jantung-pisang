@@ -89,25 +89,47 @@ function stringListEditor(values, onChange, cfg = {}) {
   return wrap;
 }
 
+/** A textarea that grows with its content. Fixed-height boxes with
+    inner scrollbars are miserable on a phone held one-handed. */
+function autoGrow(ta) {
+  const fit = () => {
+    ta.style.height = 'auto';
+    ta.style.height = `${Math.max(ta.scrollHeight, 60)}px`;
+  };
+  ta.addEventListener('input', fit);
+  // scrollHeight is 0 until the node is in the document.
+  requestAnimationFrame(fit);
+  setTimeout(fit, 60);
+  return ta;
+}
+
 /* ── The nine editors ───────────────────────────────────────── */
 
 const EDITORS = {
 
   /* 1 ── text ─────────────────────────────────────────────── */
   text(section, value, onChange) {
-    return el('textarea', {
+    return autoGrow(el('textarea', {
       placeholder: section.config?.placeholder || '',
-      rows: section.config?.rows || 3,
+      rows: section.config?.rows || 2,
+      style: 'font-family:inherit;line-height:1.6',
       onInput: (e) => onChange(e.target.value),
-    }, value || '');
+    }, value || ''));
   },
 
   /* 2 ── bullets ──────────────────────────────────────────── */
+  // ONE TEXTAREA, one line per bullet. Enter makes the next line,
+  // the way any notes app behaves. No "+ add row" button — that
+  // button was one tap per clinical finding, every single day.
   bullets(section, value, onChange) {
-    return stringListEditor(value, onChange, {
-      placeholder: section.config?.placeholder || '',
-      multiline: section.config?.multiline === true,
-    });
+    const ta = autoGrow(el('textarea', {
+      placeholder: section.config?.placeholder || 'Satu baris per poin…',
+      rows: 2,
+      style: 'font-family:inherit;line-height:1.6',
+      onInput: (e) => onChange(e.target.value.split('\n')),
+    }, (value || []).join('\n')));
+    return el('div', {}, ta,
+      el('div', { class: 'small faint', text: 'Satu baris = satu poin.' }));
   },
 
   /* 3 ── fixed-items ──────────────────────────────────────── */

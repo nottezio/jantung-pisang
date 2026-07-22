@@ -11,6 +11,7 @@ import { TYPE_IDS, SECTION_TYPES, validateKey, slugify } from '../schema.js';
 import { validateTemplate, referencedTags } from '../render.js';
 import { saveTemplate, saveSettings, duplicateTemplate, deleteTemplate } from '../store.js';
 import { mount, openDialog, confirmDialog } from './shell.js';
+import { seedTemplate } from '../seed.js';
 import { navigate } from '../app.js';
 
 // Slots provided by the engine rather than by a section.
@@ -219,6 +220,18 @@ export function renderSettings(ctx) {
         ctx.template = { ...copy, id };
         navigate({ route: 'settings', reload: true });
       } }, 'Duplikat template'),
+      el('button', { onClick: async () => {
+        const ok = await confirmDialog('Kembalikan template bawaan',
+          'Semua bagian dan teks template akan diganti dengan bawaan aplikasi.\n\n'
+          + 'Data SOAP yang sudah tersimpan TIDAK dihapus — bagian yang '
+          + 'kuncinya sama akan tampil kembali seperti semula.',
+          'Kembalikan');
+        if (!ok) return;
+        const fresh = seedTemplate(template.userId);
+        template.sections = fresh.sections;
+        template.render = fresh.render;
+        await persistTemplate();
+      } }, 'Kembalikan ke bawaan'),
       ctx.templates.length > 1 ? el('button', { class: 'btn-danger', onClick: async () => {
         const ok = await confirmDialog('Hapus template', `Hapus "${template.name}"?`);
         if (!ok) return;

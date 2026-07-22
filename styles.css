@@ -312,3 +312,75 @@ dialog::backdrop { background: rgba(28,35,33,.34); }
   font-size: .88rem; font-weight: 550;
   z-index: 100; box-shadow: var(--shadow);
 }
+
+/* ── Dark mode ─────────────────────────────────────────────
+   Every colour above is a variable, so this is a re-declaration,
+   not a second stylesheet. Follows the system by default; the
+   toggle in the top bar forces light or dark.
+   Accent is lightened — #2D6E7E lacks contrast on a dark ground.
+   ────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ink:    #E9E6DF;
+    --paper:  #141817;
+    --line:   #333B38;
+    --accent: #4FA3B5;
+
+    --ink-soft:    #A6ADA8;
+    --ink-faint:   #7B837E;
+    --surface:     #1C2321;
+    --surface-alt: #252D2A;
+    --accent-soft: #1D383E;
+    --accent-deep: #6FC0D2;
+    --danger:      #E28877;
+    --danger-soft: #38231F;
+
+    --stage-early: #D98B5A;
+    --stage-mid:   #4FA3B5;
+    --stage-done:  #6FA57C;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 1px 8px rgba(0,0,0,.25);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink:    #E9E6DF;
+  --paper:  #141817;
+  --line:   #333B38;
+  --accent: #4FA3B5;
+
+  --ink-soft:    #A6ADA8;
+  --ink-faint:   #7B837E;
+  --surface:     #1C2321;
+  --surface-alt: #252D2A;
+  --accent-soft: #1D383E;
+  --accent-deep: #6FC0D2;
+  --danger:      #E28877;
+  --danger-soft: #38231F;
+
+  --stage-early: #D98B5A;
+  --stage-mid:   #4FA3B5;
+  --stage-done:  #6FA57C;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.35), 0 1px 8px rgba(0,0,0,.25);
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+
+/* Primary buttons need dark text on the lightened accent. */
+:root[data-theme="dark"] .btn-primary,
+:root[data-theme="dark"] .btn-primary:hover { color: #10201F; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-primary,
+  :root:not([data-theme="light"]) .btn-primary:hover { color: #10201F; }
+}
+
+:root[data-theme="dark"] .toast { background: var(--surface-alt); color: var(--ink); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .toast {
+    background: var(--surface-alt); color: var(--ink);
+  }
+}

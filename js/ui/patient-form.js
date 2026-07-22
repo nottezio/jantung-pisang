@@ -10,7 +10,8 @@
 //  Folded:   gender, insurance, admission, classification, konsul,
 //            assignedTo, followUpExempt, disposition
 // ─────────────────────────────────────────────────────────────
-import { el, clear, clone, computeAge, toast } from '../util.js';
+import { el, clear, clone, computeAge, toast,
+         parseFlexibleDate, toTypedDate } from '../util.js';
 import { BLANK_PATIENT, createPatient, updatePatient, listPatients } from '../store.js';
 import { openDialog } from './shell.js';
 import { DPJP_ROLES, ENTRY_TYPES, PHASES, DISPOSITIONS } from '../seed.js';
@@ -81,6 +82,7 @@ export async function openPatientForm(existing, onSaved) {
   const refreshAge = () => {
     const a = computeAge(p.dob);
     ageOut.textContent = a === '' ? '' : ` · ${a} tahun`;
+    ageOut.style.color = a === '' && p.dob === '' ? '' : '';
   };
 
   body.append(
@@ -88,8 +90,16 @@ export async function openPatientForm(existing, onSaved) {
     el('div', { class: 'field-row' },
       el('div', {},
         el('label', {}, 'Tanggal lahir', ageOut),
-        el('input', { type: 'date', value: p.dob || '',
-          onInput: (e) => { p.dob = e.target.value; refreshAge(); } }),
+        // Typed, not picked. Accepts 14/3/1968, 14-03-1968, 14031968.
+        // The native picker needs three taps and a year-scroll to
+        // reach 1968; typing eight digits needs none.
+        el('input', {
+          type: 'text', inputmode: 'numeric',
+          placeholder: 'hh/bb/tttt',
+          value: toTypedDate(p.dob),
+          onInput: (e) => { p.dob = parseFlexibleDate(e.target.value); refreshAge(); },
+          onBlur: (e) => { if (p.dob) e.target.value = toTypedDate(p.dob); },
+        }),
       ),
       text('No. RM', 'mrn', { inputMode: 'numeric' }),
     ),
@@ -127,28 +137,54 @@ export async function openPatientForm(existing, onSaved) {
 
   body.append(text('Diagnosis', 'mainDiagnosis'));
 
-  /* DPJP — one row by default, add more only if needed. */
+  /* DPJP — one NAME can hold several ROLES. The same consultant is
+     routinely both Utama and Tindakan, and forcing that to be two
+     rows means typing the same name twice. Rows are grouped by name
+     in the UI and expanded back to {role, name} pairs on save. */
   const dpjpWrap = el('div');
+  let dpjpRows = groupDpjp(p.dpjp);
+
+  function groupDpjp(list) {
+    const byName = new Map();
+    for (const d of list || []) {
+      if (!d?.name) continue;
+      if (!byName.has(d.name)) byName.set(d.name, { name: d.name, roles: new Set() });
+      byName.get(d.name).roles.add(d.role);
+    }
+    const rows = [...byName.values()];
+    return rows.length ? rows : [{ name: '', roles: new Set([DPJP_ROLES[0], DPJP_ROLES[1]]) }];
+  }
+
   function drawDpjp() {
     clear(dpjpWrap);
-    if (!p.dpjp?.length) p.dpjp = [{ role: DPJP_ROLES[0], name: '' }];
+    dpjpRows.forEach((row, i) => {
+      const chips = el('div', { class: 'btn-row', style: 'gap:4px;margin:4px 0 10px' },
+        ...DPJP_ROLES.map(r => {
+          const on = row.roles.has(r);
+          const short = r.replace('DPJP ', '').replace('Pelimpahan Wewenang', 'Pelimpahan');
+          const btn = el('button', {
+            type: 'button',
+            class: 'btn-sm ' + (on ? 'btn-primary' : ''),
+            style: 'min-height:32px;padding:0 10px;font-size:.8rem',
+            onClick: () => {
+              if (row.roles.has(r)) row.roles.delete(r); else row.roles.add(r);
+              drawDpjp();
+            },
+          }, short);
+          return btn;
+        }),
+      );
 
-    p.dpjp.forEach((d, i) => {
-      const roleSelect = el('select', {
-        style: 'flex:0 0 150px',
-        onChange: (e) => { p.dpjp[i].role = e.target.value; },
-      }, ...DPJP_ROLES.map(r => el('option', { value: r, selected: d.role === r }, r)));
-
-      dpjpWrap.append(el('div', { class: 'bullet-row' },
-        // Single DPJP is the common case — hide the role picker until
-        // there is a second one to disambiguate.
-        p.dpjp.length > 1 ? roleSelect : null,
-        el('input', { value: d.name || '', placeholder: 'Nama DPJP',
-          onInput: (e) => { p.dpjp[i].name = e.target.value; } }),
-        p.dpjp.length > 1
-          ? el('button', { class: 'btn-sm btn-ghost btn-danger', type: 'button',
-              onClick: () => { p.dpjp.splice(i, 1); drawDpjp(); } }, '✕')
-          : null,
+      dpjpWrap.append(el('div', { style: i ? 'margin-top:8px' : '' },
+        el('div', { class: 'bullet-row' },
+          el('input', { value: row.name, placeholder: 'Nama DPJP',
+            onInput: (e) => { row.name = e.target.value; } }),
+          dpjpRows.length > 1
+            ? el('button', { class: 'btn-sm btn-ghost btn-danger', type: 'button',
+                onClick: () => { dpjpRows.splice(i, 1); drawDpjp(); } }, '✕')
+            : null,
+        ),
+        chips,
       ));
     });
 
@@ -156,14 +192,18 @@ export async function openPatientForm(existing, onSaved) {
       class: 'btn-sm btn-ghost', type: 'button',
       style: 'min-height:0;padding:2px 4px',
       onClick: () => {
-        const used = new Set(p.dpjp.map(d => d.role));
-        p.dpjp.push({ role: DPJP_ROLES.find(r => !used.has(r)) || DPJP_ROLES[0], name: '' });
+        dpjpRows.push({ name: '', roles: new Set([DPJP_ROLES[2]]) });
         drawDpjp();
       },
     }, '+ DPJP lain'));
   }
   drawDpjp();
-  body.append(el('div', { class: 'field' }, el('label', { text: 'DPJP' }), dpjpWrap));
+  body.append(el('div', { class: 'field' },
+    el('label', { text: 'DPJP' }),
+    dpjpWrap,
+    el('div', { class: 'small faint',
+      text: 'Ketuk peran yang berlaku. Satu nama boleh punya lebih dari satu peran.' }),
+  ));
 
   /* ═══ FOLDED: everything the daily report does not read ═══ */
 
@@ -262,8 +302,16 @@ export async function openPatientForm(existing, onSaved) {
     if (!String(p.name || '').trim()) {
       err.textContent = 'Nama pasien wajib diisi.'; err.hidden = false; return;
     }
-    // An empty DPJP row is the default state, not data.
-    p.dpjp = (p.dpjp || []).filter(d => String(d.name || '').trim());
+    // Expand grouped rows back into the stored {role, name} array.
+    // DPJP_ROLES order is preserved so the report lists Utama first.
+    p.dpjp = [];
+    for (const r of DPJP_ROLES) {
+      for (const row of dpjpRows) {
+        if (row.roles.has(r) && String(row.name || '').trim()) {
+          p.dpjp.push({ role: r, name: row.name.trim() });
+        }
+      }
+    }
     err.hidden = true;
     saveBtn.disabled = true;
     saveBtn.textContent = 'Menyimpan…';

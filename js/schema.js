@@ -44,8 +44,11 @@ export const SECTION_TYPES = {
   text: {
     label: 'Teks bebas',
     hint: 'Satu blok prosa bebas.',
-    blank: () => '',
-    normalize: (v) => (typeof v === 'string' ? v : ''),
+    // config.default seeds a blank entry with a skeleton the user
+    // types into — "Tekanan Darah :" and so on. This is what lets a
+    // whole multi-field block be one textarea instead of six inputs.
+    blank: (cfg) => String(cfg?.default ?? ''),
+    normalize: (v, cfg) => (typeof v === 'string' ? v : String(cfg?.default ?? '')),
     isEmpty: (v) => !nonEmpty(v),
     render: (v) => String(v ?? ''),
   },
@@ -53,8 +56,14 @@ export const SECTION_TYPES = {
   bullets: {
     label: 'Daftar poin',
     hint: 'Daftar baris yang bisa ditambah, dihapus, dan diurutkan.',
-    blank: () => [],
-    normalize: (v) => (Array.isArray(v) ? v.map(x => String(x ?? '')) : []),
+    blank: (cfg) => (cfg?.default ? String(cfg.default).split('\n') : []),
+    // Accepts a raw string so the editor can be a plain textarea:
+    // one line per item, no "+ add row" button.
+    normalize: (v, cfg) => {
+      if (typeof v === 'string') return v.split('\n');
+      if (Array.isArray(v)) return v.map(x => String(x ?? ''));
+      return cfg?.default ? String(cfg.default).split('\n') : [];
+    },
     isEmpty: (v) => !(v || []).some(nonEmpty),
     // Empty lines are dropped at render so a half-filled list
     // never emits a stray "- " into the WhatsApp message.
