@@ -11,7 +11,9 @@ import { renderPatients } from './ui/patients.js';
 import { renderPatientDetail } from './ui/patient-detail.js';
 import { renderSettings } from './ui/settings.js';
 
+/* Shared, reloaded on sign-in and after template edits. */
 const ctx = { templates: [], template: null, settings: null };
+
 let currentRoute = { route: 'patients' };
 
 export function navigate(next) {
@@ -48,15 +50,12 @@ async function loadContext() {
  * onAuthStateChanged fires as soon as a cached user is known, but the
  * auth token backing Firestore requests may not have propagated yet.
  * The first query then fails with permission-denied even though the
- * rules are correct. Retry briefly rather than surfacing an error the
- * user can clear just by clicking a nav button.
+ * rules are correct.
  */
 async function loadContextWithRetry(attempts = 4) {
   for (let i = 0; i < attempts; i++) {
-    try {
-      await loadContext();
-      return;
-    } catch (err) {
+    try { await loadContext(); return; }
+    catch (err) {
       const racy = err?.code === 'permission-denied'
                 || err?.code === 'unauthenticated';
       if (!racy || i === attempts - 1) throw err;
@@ -66,8 +65,7 @@ async function loadContextWithRetry(attempts = 4) {
 }
 
 function reportLoadFailure(err) {
-  // err.code is the single most diagnostic field Firebase gives us.
-  // Never discard it.
+  // err.code is the most diagnostic field Firebase gives us. Never drop it.
   console.error('[load] failed:', err?.code, err);
   showError(
     'Gagal memuat data aplikasi. Periksa konfigurasi Firebase dan '
@@ -76,29 +74,39 @@ function reportLoadFailure(err) {
   );
 }
 
+/* ── Chrome ─────────────────────────────────────────────────── */
+
 function wireChrome() {
   $('#year').textContent = String(new Date().getFullYear());
-  $('#versionTag').textContent = APP_VERSION;
+  $('#versionTag').textContent = APP_VERSION;   // visible build, requirement #9
 
   $$('#nav [data-route]').forEach(btn => {
     btn.addEventListener('click', () => navigate({ route: btn.dataset.route }));
   });
-  $('#signOutBtn').addEventListener('click', () => signOut(auth));
+  $('#signOutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+  });
 }
 
 function setSignedIn(on) {
   $('#nav').hidden = !on;
 }
 
+/* ── Boot ───────────────────────────────────────────────────── */
+
 async function boot() {
   wireChrome();
   watchConnectivity();
 
+  // Layer 1 of 3 offline layers. Registration failure is not
+  // fatal — the app still runs online.
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', { type: 'module' })
       .catch(err => console.warn('[sw] registration failed:', err));
   }
 
+  // Never block the first paint on a token refresh. A hospital
+  // dead zone must not lock the user out of their own patient list.
   await authReady;
 
   onAuthStateChanged(auth, async (user) => {
