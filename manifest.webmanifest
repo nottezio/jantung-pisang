@@ -1,0 +1,10 @@
+{
+  "name": "Patient Tracker",
+  "short_name": "Pasien",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FAFAF7",
+  "theme_color": "#FAFAF7",
+  "icons": []
+}

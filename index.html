@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Patient Tracker</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>Patient Tracker</h1>
+      <span class="offline-flag" id="offlineFlag">Offline</span>
+      <span class="spacer"></span>
+      <nav class="btn-row" id="nav" hidden>
+        <button class="btn-sm btn-ghost" data-route="patients">Pasien</button>
+        <button class="btn-sm btn-ghost" data-route="settings">Pengaturan</button>
+        <button class="btn-sm btn-ghost" id="signOutBtn">Keluar</button>
+      </nav>
+    </header>
+
+    <main id="view"><p class="muted">Memuat…</p></main>
+
+    <footer class="footer">
+      © <span id="year"></span> Acre · versi <code id="versionTag">—</code>
+    </footer>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

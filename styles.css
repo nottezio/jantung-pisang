@@ -1,0 +1,314 @@
+/* ═══════════════════════════════════════════════════════════
+   PATIENT TRACKER — styles
+   Hand-written. No framework, no CDN. Every colour is a CSS
+   variable so dark mode remains possible without a rewrite.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --ink:    #1C2321;
+  --paper:  #FAFAF7;
+  --line:   #E2DFD6;
+  --accent: #2D6E7E;
+
+  /* Derived — all traceable to the four above. */
+  --ink-soft:    #5A625E;
+  --ink-faint:   #8A918D;
+  --surface:     #FFFFFF;
+  --surface-alt: #F4F2EC;
+  --accent-soft: #E8F0F1;
+  --accent-deep: #235863;
+  --danger:      #A33A28;
+  --danger-soft: #F7ECE9;
+
+  /* Reserved for Phase 3. Declared now so the palette is complete. */
+  --stage-early: #C4622D;
+  --stage-mid:   #2D6E7E;
+  --stage-done:  #4A7856;
+
+  --radius:   6px;
+  --radius-l: 10px;
+  --tap:      44px;          /* minimum touch target — iPad, fingers */
+  --shadow:   0 1px 2px rgba(28,35,33,.06), 0 1px 8px rgba(28,35,33,.04);
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ── Accessibility floor ─────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── Layout ──────────────────────────────────────────────── */
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 {
+  font-size: 1rem; font-weight: 650; margin: 0;
+  letter-spacing: -.01em; white-space: nowrap;
+}
+.topbar .spacer { flex: 1; }
+
+.offline-flag {
+  display: none;
+  font-size: .75rem; font-weight: 600;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-alt); color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+body.is-offline .offline-flag { display: inline-block; }
+
+main { flex: 1; padding: 16px; max-width: 1200px; width: 100%; margin: 0 auto; }
+
+.footer {
+  padding: 20px 16px 32px;
+  text-align: center;
+  font-size: .78rem;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--line);
+}
+.footer code { font-family: var(--mono); font-size: .78rem; }
+
+/* ── Type ────────────────────────────────────────────────── */
+
+h2 { font-size: 1.15rem; font-weight: 650; margin: 0 0 4px; letter-spacing: -.01em; }
+h3 { font-size: .95rem; font-weight: 620; margin: 0 0 8px; }
+.eyebrow {
+  font-size: .7rem; font-weight: 650; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.muted { color: var(--ink-soft); }
+.faint { color: var(--ink-faint); }
+.small { font-size: .82rem; }
+
+/* ── Controls ────────────────────────────────────────────── */
+
+button, .btn {
+  font: inherit; font-weight: 550;
+  min-height: var(--tap);
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  transition: background .12s ease, border-color .12s ease;
+}
+button:hover, .btn:hover { background: var(--surface-alt); }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.btn-primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+
+.btn-danger { color: var(--danger); border-color: var(--line); }
+.btn-danger:hover { background: var(--danger-soft); border-color: var(--danger); }
+
+.btn-sm { min-height: 34px; padding: 0 11px; font-size: .84rem; }
+.btn-ghost { background: transparent; border-color: transparent; }
+.btn-ghost:hover { background: var(--surface-alt); }
+
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+input, select, textarea {
+  font: inherit;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+textarea { min-height: 84px; resize: vertical; line-height: 1.5; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); outline-offset: 1px; }
+
+label { display: block; font-size: .8rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+.field { margin-bottom: 14px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+
+/* Checkboxes need a real tap target without a giant box. */
+.check {
+  display: flex; align-items: flex-start; gap: 10px;
+  min-height: var(--tap); padding: 6px 8px;
+  border-radius: var(--radius); cursor: pointer;
+}
+.check:hover { background: var(--surface-alt); }
+.check input { width: 20px; height: 20px; min-height: 0; margin-top: 11px; flex: none; accent-color: var(--accent); }
+.check span { padding-top: 9px; }
+
+/* ── Cards ───────────────────────────────────────────────── */
+
+.card-grid {
+  display: grid; gap: 12px;
+  grid-template-columns: 1fr;                      /* mobile: 1 col */
+}
+@media (min-width: 700px)  { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1080px) { .card-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+.card.tappable { cursor: pointer; text-align: left; width: 100%; display: block; }
+.card.tappable:hover { border-color: var(--accent); background: var(--surface); }
+
+.pt-name { font-size: 1.02rem; font-weight: 640; letter-spacing: -.01em; margin: 0 0 2px; }
+.pt-meta { font-size: .84rem; color: var(--ink-soft); margin-bottom: 8px; }
+.pt-dx   { font-size: .88rem; margin-bottom: 10px; }
+.pt-foot {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+
+.chip {
+  font-size: .74rem; font-weight: 600;
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--surface-alt); color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.chip-accent { background: var(--accent-soft); color: var(--accent-deep); border-color: transparent; }
+.chip-out    { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+
+/* ── Section blocks (SOAP editor, detail panels) ─────────── */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.panel-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.panel-head .spacer { flex: 1; }
+
+.list-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--line);
+}
+.list-row:last-child { border-bottom: 0; }
+
+.bullet-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; }
+.bullet-row input, .bullet-row textarea { flex: 1; }
+.bullet-row button { flex: none; }
+
+/* ── Toolbar / filters ───────────────────────────────────── */
+
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-bottom: 14px;
+}
+.toolbar select { width: auto; min-width: 150px; }
+.toolbar .spacer { flex: 1; }
+
+/* ── Empty & error states ────────────────────────────────── */
+
+.empty {
+  text-align: center; padding: 44px 20px;
+  border: 1px dashed var(--line); border-radius: var(--radius-l);
+  color: var(--ink-soft);
+}
+.empty h3 { color: var(--ink); }
+
+.notice {
+  padding: 11px 13px; border-radius: var(--radius);
+  border: 1px solid var(--line); background: var(--surface-alt);
+  font-size: .88rem; margin-bottom: 14px;
+}
+.notice-warn   { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.notice-accent { background: var(--accent-soft); border-color: transparent; color: var(--accent-deep); }
+
+/* ── Modal ───────────────────────────────────────────────── */
+
+dialog {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  width: min(720px, calc(100vw - 24px));
+  max-height: calc(100vh - 48px);
+  box-shadow: 0 12px 48px rgba(28,35,33,.18);
+}
+dialog::backdrop { background: rgba(28,35,33,.34); }
+.dialog-head {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.dialog-head h2 { flex: 1; }
+.dialog-body { padding: 16px; overflow-y: auto; }
+.dialog-foot {
+  position: sticky; bottom: 0;
+  display: flex; gap: 8px; justify-content: flex-end;
+  padding: 12px 16px; background: var(--paper);
+  border-top: 1px solid var(--line);
+}
+
+/* ── Preview (render output) ─────────────────────────────── */
+
+.preview-box {
+  font-family: var(--mono);
+  font-size: .84rem;
+  line-height: 1.55;
+  min-height: 380px;
+  white-space: pre-wrap;
+  background: var(--surface);
+}
+
+/* ── Toast ───────────────────────────────────────────────── */
+
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--ink); color: var(--paper);
+  padding: 10px 18px; border-radius: 999px;
+  font-size: .88rem; font-weight: 550;
+  z-index: 100; box-shadow: var(--shadow);
+}
