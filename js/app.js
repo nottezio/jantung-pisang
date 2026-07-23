@@ -11,6 +11,7 @@ import { renderPatients } from './ui/patients.js';
 import { renderPatientDetail } from './ui/patient-detail.js';
 import { renderSettings } from './ui/settings.js';
 import { openFormatLibrary } from './ui/formats.js';
+import { renderDpjpRegistry } from './ui/dpjp-registry.js';
 
 /* Shared, reloaded on sign-in and after template edits. */
 const ctx = { templates: [], template: null, settings: null };
@@ -36,6 +37,7 @@ function draw() {
   switch (currentRoute.route) {
     case 'patient':  return renderPatientDetail(currentRoute.id, ctx);
     case 'settings': return renderSettings(ctx);
+    case 'dpjp':     return renderDpjpRegistry();
     default:         return renderPatients(ctx);
   }
 }

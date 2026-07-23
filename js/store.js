@@ -257,6 +257,34 @@ export function duplicateTemplate(tpl) {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   DPJP REGISTRY
+   ⛔ No password field, ever. Username only, if a system login
+   must be referenced at all — hard requirement #2.
+   ───────────────────────────────────────────────────────────── */
+
+export const BLANK_DPJP = () => ({
+  name: '', initial: '', titles: '',
+  reportChannel: 'viaChief', needsPDF: false,
+  notes: '', mrDays: [],
+});
+
+export async function listDpjp() {
+  const q = query(col('dpjp'), where('userId', '==', requireUser()));
+  const snap = await getDocs(q);
+  return snap.docs.map(withId).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+}
+
+export async function saveDpjp(d) {
+  const id = d.id || uid('dpjp_');
+  await setDoc(doc(db, 'dpjp', id), outbound(d, { isNew: !d.id }), { merge: true });
+  return id;
+}
+
+export async function deleteDpjp(id) {
+  await deleteDoc(doc(db, 'dpjp', id));
+}
+
+/* ─────────────────────────────────────────────────────────────
    SETTINGS
    ───────────────────────────────────────────────────────────── */
 

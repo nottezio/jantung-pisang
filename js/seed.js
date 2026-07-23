@@ -103,6 +103,13 @@ export const INVESTIGATION_TYPES = [
   'CT', 'Urinalisa', 'ADT', 'Laporan Tindakan',
 ];
 
+export const REPORT_CHANNELS = [
+  { value: 'viaChief',    label: 'Lewat Chief' },
+  { value: 'viaChiefPDF', label: 'Lewat Chief (PDF)' },
+  { value: 'pcAndGrup',   label: 'PC & grup' },
+  { value: 'pcOnly',      label: 'PC saja' },
+];
+
 export const DPJP_ROLES = [
   'DPJP Utama', 'DPJP Tindakan', 'DPJP Onsite', 'Pelimpahan Wewenang',
 ];
