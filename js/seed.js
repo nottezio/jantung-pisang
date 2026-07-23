@@ -13,61 +13,30 @@ export const SEED_TEMPLATE_ID = 'tpl_klinis';
 
 export const SEED_SECTIONS = [
   {
-    key: 'contextSentence',
-    label: 'Kalimat konteks',
+    key: 'note',
+    label: 'Catatan',
     type: 'text',
-    config: { placeholder: 'Perawatan hari ke-… dengan …' },
-  },
-  {
-    key: 'subjective',
-    label: 'S — Subjektif',
-    type: 'bullets',
-    config: { placeholder: 'Sesak berkurang\nNyeri dada tidak ada' },
-  },
-  {
-    key: 'riskFactors',
-    label: 'Faktor risiko kardiovaskular',
-    type: 'text',
+    // ONE BOX. The whole note is free text, the way a notes app
+    // works. The skeleton below is only a starting point — it is
+    // seed DATA, editable in Pengaturan, and the user can delete
+    // any of it.
+    //
+    // WhatsApp markup (*bold*) lives in the skeleton rather than in
+    // the render string, so what is typed is what is sent.
     config: {
-      default: 'Riwayat Hipertensi \nRiwayat Diabetes Melitus \nRiwayat Dislipidemia \nRiwayat Merokok ',
+      rows: 20,
+      default:
+        '*S:*\n- \n\n'
+        + '*Faktor risiko kardiovaskular:*\n'
+        + 'Riwayat Hipertensi \nRiwayat Diabetes Melitus \n'
+        + 'Riwayat Dislipidemia \nRiwayat Merokok \n\n'
+        + '*O:*\nCompos mentis\nTekanan Darah : \nNadi : \n'
+        + 'Pernapasan : \nSuhu : \nSpO2 : \n\n'
+        + '*A:*\n- \n\n'
+        + '*T:*\n- \n\n'
+        + '*P:*\n- \n\n'
+        + 'Mohon arahan dan koreksinya dokter. Terima kasih.',
     },
-  },
-  {
-    key: 'vitals',
-    label: 'O — Tanda vital',
-    type: 'text',
-    config: {
-      default: 'Compos mentis\nTekanan Darah : \nNadi : \nPernapasan : \nSuhu : \nSpO2 : ',
-    },
-  },
-  {
-    key: 'exam',
-    label: 'Pemeriksaan fisik',
-    type: 'text',
-    config: {
-      default: 'Kepala : \nThorax : \nCor : \nPulmo : \nAbdomen : \nEkstremitas : ',
-    },
-  },
-  {
-    key: 'investigations',
-    label: 'Pemeriksaan penunjang',
-    type: 'dated-repeat',
-    config: {},
-  },
-  { key: 'assessment', label: 'A — Assessment', type: 'bullets', config: {} },
-  { key: 'therapy',    label: 'T — Terapi',     type: 'bullets', config: {} },
-  { key: 'plan',       label: 'P — Plan',       type: 'bullets', config: {} },
-  {
-    key: 'tsBlocks',
-    label: 'TS lain (opsional)',
-    type: 'text',
-    config: { placeholder: 'TS Penyakit Dalam\nA/ …\nP/ …\nT/ …' },
-  },
-  {
-    key: 'closing',
-    label: 'Penutup',
-    type: 'text',
-    config: { default: 'Mohon arahan dan koreksinya dokter. Terima kasih.' },
   },
 ];
 
@@ -82,50 +51,7 @@ export const SEED_RENDER = `{{salam}} dokter. Tabe dokter, mohon izin melaporkan
 _{{role}} : {{name}}_
 {{/dpjp}}
 
-_{{contextSentence}}_
-
-*S:*
-{{#subjective}}
-- {{.}}
-{{/subjective}}
-
-*Faktor risiko kardiovaskular:*
-{{riskFactors}}
-
-*O:*
-{{vitals}}
-
-{{exam}}
-{{#patient.insurance}}
-{{patient.insurance}}
-{{/patient.insurance}}
-
-{{#investigations}}
-*{{type}}{{#subtype}} {{subtype}}{{/subtype}}{{#location}} {{location}}{{/location}} ({{date}})*
-{{#values}}{{#abnormal}}*{{/abnormal}}{{label}} : {{value}}{{#abnormal}}*{{/abnormal}}
-{{/values}}{{#content}}{{content}}{{/content}}
-
-{{/investigations}}
-*Mohon izin pasien kami assess dengan :*
-{{#assessment}}
-- {{.}}
-{{/assessment}}
-
-*Mohon izin pasien kami terapi dengan :*
-{{#therapy}}
-- {{.}}
-{{/therapy}}
-
-*Plan :*
-{{#plan}}
-- {{.}}
-{{/plan}}
-
-{{#tsBlocks}}
-{{tsBlocks}}
-
-{{/tsBlocks}}
-{{closing}}`;
+{{note}}`;
 
 export const REPORT_TYPES = [
   { value: 'followup-harian',   label: 'follow up harian' },

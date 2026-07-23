@@ -90,8 +90,12 @@ export function openSoapEditor({ patient, ctx, draft, existingId = null, onSaved
 
   function drawSections() {
     sectionsWrap.replaceChildren();
-    for (const section of ctx.template.sections || []) {
-      sectionsWrap.append(
+    const sections = ctx.template.sections || [];
+    const bare = sections.length === 1;
+    const box = bare ? el('div', { class: 'panel' }) : sectionsWrap;
+
+    for (const section of sections) {
+      box.append(
         renderSectionEditor(
           section,
           entry.sections[section.key],
@@ -101,9 +105,11 @@ export function openSoapEditor({ patient, ctx, draft, existingId = null, onSaved
             entry,
             onIncludedChange: (ids) => { entry.includedInvestigationIds = ids; markDirty(); },
           },
+          { bare },
         ),
       );
     }
+    if (bare) sectionsWrap.append(box);
   }
   drawSections();
 

@@ -411,7 +411,7 @@ function summarise(inv) {
    exhaustive over the registry.
    ═══════════════════════════════════════════════════════════ */
 
-export function renderSectionEditor(section, value, onChange, ctx) {
+export function renderSectionEditor(section, value, onChange, ctx, opts = {}) {
   const editor = EDITORS[section.type];
 
   if (!editor) {
@@ -425,6 +425,11 @@ export function renderSectionEditor(section, value, onChange, ctx) {
 
   const t = getType(section.type);
   const node = editor(section, t.normalize(value, section.config), onChange, ctx);
+
+  // Single-section template: no heading, no key chip, just the box.
+  if (opts.bare) {
+    return el('div', { dataset: { sectionKey: section.key } }, node);
+  }
 
   return el('div', { class: 'panel', dataset: { sectionKey: section.key } },
     el('div', { class: 'panel-head' },
