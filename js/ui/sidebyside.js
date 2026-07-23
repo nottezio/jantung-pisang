@@ -19,10 +19,12 @@ export function openSideBySide({ patient, entry, template, ctx, initialText }) {
   const { dialog, body, foot, close } = openDialog('Susun dengan format', { wide: true });
   dialog.classList.add('sbs-dialog');
 
-  const soapText = initialText ?? (() => {
+  // initialText wins; entry is optional so a transfer can open this
+  // view with the carried-forward note before anything is rendered.
+  const soapText = initialText ?? (entry ? (() => {
     const r = renderReport({ patient, entry, template, settings: ctx.settings });
     return r.ok ? r.text : `(gagal render: ${r.error})`;
-  })();
+  })() : '');
 
   const formats = ctx.settings?.formats || [];
 
@@ -45,7 +47,7 @@ export function openSideBySide({ patient, entry, template, ctx, initialText }) {
 
   const left = el('div', { class: 'sbs-pane' },
     el('div', { class: 'panel-head' },
-      el('h3', { text: 'SOAP pasien' }),
+      el('h3', { text: 'Catatan lama' }),
       el('span', { class: 'spacer' }),
       copySoap,
     ),

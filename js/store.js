@@ -45,6 +45,8 @@ const withId = (snap) => ({ id: snap.id, ...snap.data() });
 export const BLANK_PATIENT = () => ({
   name: '', dob: '', gender: '', mrn: '', insurance: '',
   location: { ward: '', floor: '', room: '', bed: '' },
+  previousLocation: null,      // set on transfer; drives {{previousLocation.full}}
+  transferDate: null,
   dpjp: [],
   entryType: 'Baru-Poli',
   currentPhase: 'Follow-up',
@@ -99,6 +101,27 @@ export async function deletePatient(id) {
   const entries = await listEntries(id);
   await Promise.all(entries.map(e => deleteDoc(doc(db, 'soapEntries', e.id))));
   await deleteDoc(doc(db, 'patients', id));
+}
+
+/* ── Transfer ────────────────────────────────────────────────
+   A ward move is a real clinical event, not an edit. It stamps
+   where the patient came from so the report header can say
+   "perpindahan dari X ke Y", and it never touches the note text —
+   restructuring the note is the user's job, because only the user
+   knows what changed clinically. */
+
+export async function transferPatient(patient, newLocation, date) {
+  const from = { ...(patient.location || {}) };
+  const next = {
+    ...patient,
+    previousLocation: from,
+    transferDate: date,
+    location: { ...newLocation },
+    entryType: 'Perpindahan',
+  };
+  await updatePatient(patient.id, next);
+  Object.assign(patient, next);
+  return next;
 }
 
 /* ── Workflow stage ──────────────────────────────────────────

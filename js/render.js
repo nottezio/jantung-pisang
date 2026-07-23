@@ -76,6 +76,12 @@ export function buildContext({ patient, entry, template, settings, now = new Dat
       mainDiagnosis: patient?.mainDiagnosis || '',
     },
     location: { ...(patient?.location || {}), full: locationFull(patient?.location) },
+    // Falsy when absent, so {{#previousLocation}}…{{/previousLocation}}
+    // suppresses the whole "dari X ke Y" clause for non-transfers.
+    previousLocation: patient?.previousLocation
+      ? { ...patient.previousLocation, full: locationFull(patient.previousLocation) }
+      : null,
+    transferDate: formatDateID(patient?.transferDate),
     dpjp: (patient?.dpjp || []).filter(d => d?.name),
     source: patient?.source?.dept || '',
     referringDoctor: patient?.source?.referringDoctor || '',

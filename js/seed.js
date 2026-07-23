@@ -43,7 +43,7 @@ export const SEED_SECTIONS = [
 // The render string. Verified against the reference documents.
 // ⚠️ Blank lines here are load-bearing — they are what makes the
 //    WhatsApp message readable. Do not "tidy" them.
-export const SEED_RENDER = `{{salam}} dokter. Tabe dokter, mohon izin melaporkan {{reportType.label}}{{#source}} dari *{{source}}*{{/source}} di *{{location.full}}* atas nama:
+export const SEED_RENDER = `{{salam}} dokter. Tabe, mohon izin melaporkan {{reportType.label}}{{#previousLocation}} dari *{{previousLocation.full}}* ke{{/previousLocation}}{{^previousLocation}} di{{/previousLocation}} *{{location.full}}* atas nama:
 
 *{{patient.name}} / {{patient.dob}} / {{patient.age}} tahun / RM {{patient.mrn}}*
 

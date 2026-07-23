@@ -20,6 +20,7 @@ import { openSoapEditor } from './soap-editor.js';
 import { navigate } from '../app.js';
 import { stageTrack } from './stage.js';
 import { openSideBySide } from './sidebyside.js';
+import { openTransferDialog } from './transfer.js';
 
 export async function renderPatientDetail(id, ctx) {
   loading('Memuat pasien…');
@@ -51,6 +52,12 @@ function draw(patient, entries, ctx) {
       el('h2', { style: 'flex:1;min-width:0', text: patient.name || '(tanpa nama)' }),
       el('button', {
         class: 'btn-sm btn-ghost',
+        onClick: () => openTransferDialog({
+          patient, ctx, onDone: () => refresh(patient, ctx),
+        }),
+      }, 'Pindah'),
+      el('button', {
+        class: 'btn-sm btn-ghost',
         onClick: () => openPatientForm(patient, () => refresh(patient, ctx)),
       }, 'Ubah'),
     ),
@@ -61,6 +68,12 @@ function draw(patient, entries, ctx) {
       locationFull(patient.location) || null,
       hari !== '' ? `hari ke-${hari}` : null,
     ].filter(Boolean).join(' · ') }),
+
+    patient.previousLocation
+      ? el('div', { class: 'small faint', style: 'margin-bottom:6px',
+          text: `Pindahan dari ${locationFull(patient.previousLocation)}`
+              + (patient.transferDate ? ` · ${formatDateID(patient.transferDate)}` : '') })
+      : null,
 
     patient.mainDiagnosis
       ? el('div', { style: 'margin-bottom:6px', text: patient.mainDiagnosis })
