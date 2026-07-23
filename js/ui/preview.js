@@ -9,7 +9,7 @@
 //  are one-off wording for this message. Re-rendering tomorrow
 //  starts from the stored data again.
 // ─────────────────────────────────────────────────────────────
-import { el, copyText, toast } from '../util.js';
+import { el, copyText, toast, stripWaMarkup } from '../util.js';
 import { renderReport } from '../render.js';
 import { openDialog } from './shell.js';
 
@@ -51,27 +51,43 @@ export function openPreview({ patient, entry, template, settings }) {
     counter,
   );
 
-  const copyBtn = el('button', {
+  /* Two destinations, two formats. WhatsApp renders *bold*; SIMGOS
+     CPPT renders the asterisks literally, so it needs them gone.
+     Both copy whatever is currently in the box, including one-off
+     edits made here. */
+  async function doCopy(btn, transform, label, successMsg) {
+    const ok = await copyText(transform(box.value));
+    if (ok) {
+      const original = btn.textContent;
+      btn.textContent = '✓ Tersalin';
+      toast(successMsg);
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    } else {
+      toast('Gagal menyalin. Pilih teksnya lalu salin manual.');
+      box.select();
+    }
+  }
+
+  const copyPlain = el('button', {
+    title: 'Tanpa *tebal* dan _miring_ — untuk CPPT SIMGOS',
+    onClick: () => doCopy(copyPlain, stripWaMarkup, 'plain',
+      'Disalin tanpa format — siap untuk SIMGOS'),
+  }, 'Salin polos (SIMGOS)');
+
+  const copyWa = el('button', {
     class: 'btn-primary',
-    onClick: async () => {
-      const ok = await copyText(box.value);
-      if (ok) {
-        copyBtn.textContent = '✓ Tersalin';
-        toast('Laporan disalin — tinggal tempel di WhatsApp');
-        setTimeout(() => { copyBtn.textContent = 'Salin ke clipboard'; }, 2000);
-      } else {
-        toast('Gagal menyalin. Pilih teksnya lalu salin manual.');
-        box.select();
-      }
-    },
-  }, 'Salin ke clipboard');
+    title: 'Dengan *tebal* dan _miring_ — untuk WhatsApp',
+    onClick: () => doCopy(copyWa, (v) => v, 'wa',
+      'Disalin — tinggal tempel di WhatsApp'),
+  }, 'Salin WA');
 
   foot.append(
     el('button', {
       onClick: () => { box.value = result.text; updateCounter(); },
-    }, 'Kembalikan hasil render'),
+    }, 'Kembalikan'),
     el('button', { onClick: close }, 'Tutup'),
-    copyBtn,
+    copyPlain,
+    copyWa,
   );
 
   box.focus();

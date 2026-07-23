@@ -11,12 +11,12 @@
 //     file, or anywhere else in this app. Hard requirement #2.
 // ─────────────────────────────────────────────────────────────
 export const firebaseConfig = {
-  apiKey: "AIzaSyAD8mR-HmQIATA-j3gbrbfAzoyfa1xrEeA",
-  authDomain: "mks-p-tracker.firebaseapp.com",
-  projectId: "mks-p-tracker",
-  storageBucket: "mks-p-tracker.firebasestorage.app",
-  messagingSenderId: "223814378248",
-  appId: "1:223814378248:web:8d3a96bf7a0ae0b74802bd"
+  apiKey:            'REPLACE_ME',
+  authDomain:        'REPLACE_ME.firebaseapp.com',
+  projectId:         'REPLACE_ME',
+  storageBucket:     'REPLACE_ME.appspot.com',
+  messagingSenderId: 'REPLACE_ME',
+  appId:             'REPLACE_ME',
 };
 
 export const isConfigured = () =>

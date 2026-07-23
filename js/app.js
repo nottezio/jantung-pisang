@@ -10,6 +10,7 @@ import { renderSignIn } from './ui/auth.js';
 import { renderPatients } from './ui/patients.js';
 import { renderPatientDetail } from './ui/patient-detail.js';
 import { renderSettings } from './ui/settings.js';
+import { openFormatLibrary } from './ui/formats.js';
 
 /* Shared, reloaded on sign-in and after template edits. */
 const ctx = { templates: [], template: null, settings: null };
@@ -113,6 +114,10 @@ function wireChrome() {
 
   $$('#nav [data-route]').forEach(btn => {
     btn.addEventListener('click', () => navigate({ route: btn.dataset.route }));
+  });
+  $('#formatBtn').addEventListener('click', () => {
+    if (!ctx.settings) return;
+    openFormatLibrary(ctx);
   });
   $('#signOutBtn').addEventListener('click', async () => {
     await signOut(auth);

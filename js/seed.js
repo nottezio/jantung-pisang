@@ -81,6 +81,9 @@ export const DEFAULT_SETTINGS = {
   greetingCutoffs: { pagi: 11, siang: 15, sore: 18 },
   greetingPrefix: 'Selamat',
   defaultSort: 'room',
+  // Blank report formats for manual copying. Plain text, no
+  // rendering. Seeded empty — the user pastes in their own.
+  formats: [],
 };
 
 export const INVESTIGATION_TYPES = [

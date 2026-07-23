@@ -36,6 +36,7 @@ const SHELL = [
   './js/ui/soap-editor.js',
   './js/ui/preview.js',
   './js/ui/settings.js',
+  './js/ui/formats.js',
 ];
 
 self.addEventListener('install', (e) => {

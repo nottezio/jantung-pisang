@@ -171,6 +171,21 @@ export const debounce = (fn, ms = 300) => {
   let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 };
 
+/**
+ * Strip WhatsApp markup for pasting into SIMGOS CPPT, which renders
+ * asterisks and underscores literally.
+ *
+ * Only paired markers on a single line are removed, so a lone
+ * asterisk in a dose ("2x1 tab*") or an underscore inside a word
+ * survives untouched. Line structure is never altered.
+ */
+export function stripWaMarkup(text) {
+  return String(text ?? '')
+    .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/_([^_\n]+)_/g, '$1')
+    .replace(/~([^~\n]+)~/g, '$1');
+}
+
 export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
