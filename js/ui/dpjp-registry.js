@@ -12,7 +12,7 @@
 import { el, clear, clone, toast } from '../util.js';
 import { listDpjp, saveDpjp, deleteDpjp, BLANK_DPJP } from '../store.js';
 import { mount, loading, showError, openDialog, confirmDialog } from './shell.js';
-import { REPORT_CHANNELS } from '../seed.js';
+import { REPORT_CHANNELS, DPJP_SEED } from '../seed.js';
 import { navigate } from '../app.js';
 
 const channelLabel = (v) => REPORT_CHANNELS.find(c => c.value === v)?.label || v;
@@ -31,6 +31,25 @@ export async function renderDpjpRegistry() {
 function draw(list) {
   const toolbar = el('div', { class: 'toolbar' },
     el('h2', { style: 'flex:1', text: `${list.length} DPJP` }),
+    list.length === 0 ? el('button', {
+      onClick: async () => {
+        const ok = await confirmDialog('Isi daftar awal',
+          `Tambahkan ${DPJP_SEED.length} DPJP dengan cara lapor yang sudah diketahui?\n\n`
+          + 'Sebagian besar nama masih kosong dan perlu diisi sendiri — '
+          + 'hanya inisial dan cara lapor yang terisi.',
+          'Tambahkan');
+        if (!ok) return;
+        try {
+          for (const d of DPJP_SEED) {
+            await saveDpjp({ ...BLANK_DPJP(), ...d });
+          }
+          toast(`${DPJP_SEED.length} DPJP ditambahkan`);
+          renderDpjpRegistry();
+        } catch (ex) {
+          toast(`Gagal: ${ex?.code || ex?.message || ex}`);
+        }
+      },
+    }, 'Isi daftar awal') : null,
     el('button', {
       class: 'btn-primary',
       onClick: () => openDpjpForm(null, () => renderDpjpRegistry()),
@@ -49,17 +68,22 @@ function draw(list) {
         el('p', { class: 'small', text:
           'Tambahkan DPJP untuk mengingat cara melapor ke masing-masing — '
           + 'lewat Chief, PDF, atau langsung PC.' }),
+        el('p', { class: 'small faint', text:
+          '"Isi daftar awal" menambahkan cara lapor yang sudah diketahui; '
+          + 'nama diisi sendiri.' }),
       );
 
   mount(el('div', {}, back, toolbar, body));
 }
 
 function dpjpRow(d) {
+  const unnamed = !String(d.name || '').trim();
   return el('div', { class: 'panel', style: 'margin-bottom:10px' },
     el('div', { class: 'panel-head' },
       el('div', { style: 'flex:1;min-width:0' },
         el('div', {},
-          el('strong', { text: d.name || '(tanpa nama)' }),
+          el('strong', { text: d.name || `(${d.initial || '?'} — nama belum diisi)`,
+            style: unnamed ? 'color:var(--stage-early)' : '' }),
           d.initial ? el('span', { class: 'faint small', text: ` (${d.initial})` }) : null,
         ),
         d.titles ? el('div', { class: 'small faint', text: d.titles }) : null,

@@ -40,7 +40,7 @@ const SHELL = [
   './js/ui/stage.js',
   './js/ui/sidebyside.js',
   './js/ui/dpjp-registry.js',
-  './js/ui/transfer.js',
+  './js/ui/reformat.js',
 ];
 
 self.addEventListener('install', (e) => {

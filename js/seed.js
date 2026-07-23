@@ -110,6 +110,28 @@ export const REPORT_CHANNELS = [
   { value: 'pcOnly',      label: 'PC saja' },
 ];
 
+/* Seed for the DPJP registry.
+   Channel assignments come from the person's own observed list.
+   NAMES ARE DELIBERATELY BLANK except where a real document
+   confirmed them — inventing an attending's name would put a
+   fabricated doctor on a clinical report. The initial is the key;
+   the user fills the name in once, in the app. */
+export const DPJP_SEED = [
+  { initial: 'AFM', name: '', reportChannel: 'viaChiefPDF', needsPDF: true },
+  { initial: 'ZD',  name: '', reportChannel: 'viaChiefPDF', needsPDF: true },
+  { initial: 'AFG', name: '', reportChannel: 'viaChiefPDF', needsPDF: true },
+  { initial: 'AHN', name: '', reportChannel: 'viaChief',    needsPDF: false },
+  { initial: 'KS',  name: '', reportChannel: 'pcAndGrup',   needsPDF: false },
+  { initial: 'PT',  name: 'dr. Pendrik Tandean, Sp.PD, KKV',
+    reportChannel: 'pcAndGrup', needsPDF: false },
+  { initial: 'PK',  name: '', reportChannel: 'pcAndGrup',   needsPDF: false },
+  { initial: 'MZ',  name: '', reportChannel: 'pcAndGrup',   needsPDF: false },
+  { initial: 'Rio', name: 'dr. Rio', reportChannel: 'pcAndGrup', needsPDF: false },
+  { initial: 'IM',  name: '', reportChannel: 'pcOnly',      needsPDF: false },
+  { initial: 'MAA', name: 'dr. Muhammad Asrul Apris, Sp.JP (K)',
+    reportChannel: 'pcOnly', needsPDF: false },
+];
+
 export const DPJP_ROLES = [
   'DPJP Utama', 'DPJP Tindakan', 'DPJP Onsite', 'Pelimpahan Wewenang',
 ];
