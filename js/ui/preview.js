@@ -12,8 +12,9 @@
 import { el, copyText, toast, stripWaMarkup } from '../util.js';
 import { renderReport } from '../render.js';
 import { openDialog } from './shell.js';
+import { openSideBySide } from './sidebyside.js';
 
-export function openPreview({ patient, entry, template, settings }) {
+export function openPreview({ patient, entry, template, settings, ctx }) {
   const { body, foot, close } = openDialog('Pratinjau laporan', { wide: true });
 
   const result = renderReport({ patient, entry, template, settings });
@@ -82,6 +83,12 @@ export function openPreview({ patient, entry, template, settings }) {
   }, 'Salin WA');
 
   foot.append(
+    ctx ? el('button', {
+      title: 'Buka berdampingan dengan format laporan',
+      onClick: () => openSideBySide({
+        patient, entry, template, ctx, initialText: box.value,
+      }),
+    }, 'Susun dengan format') : null,
     el('button', {
       onClick: () => { box.value = result.text; updateCounter(); },
     }, 'Kembalikan'),

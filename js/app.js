@@ -36,7 +36,7 @@ function draw() {
   switch (currentRoute.route) {
     case 'patient':  return renderPatientDetail(currentRoute.id, ctx);
     case 'settings': return renderSettings(ctx);
-    default:         return renderPatients();
+    default:         return renderPatients(ctx);
   }
 }
 

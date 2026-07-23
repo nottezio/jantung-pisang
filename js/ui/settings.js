@@ -291,6 +291,56 @@ export function renderSettings(ctx) {
     ),
   );
 
+  /* ═══ Workflow stages ═══ */
+  const stageWrap = el('div');
+  function drawStages() {
+    stageWrap.replaceChildren();
+    const stages = settings.stages || [];
+
+    stages.forEach((name, i) => {
+      stageWrap.append(el('div', { class: 'bullet-row' },
+        el('span', { class: 'chip', style: 'flex:none', text: String(i + 1) }),
+        el('input', { value: name,
+          onInput: (e) => { settings.stages[i] = e.target.value; } }),
+        el('button', { class: 'btn-sm btn-ghost', type: 'button', title: 'Naik',
+          disabled: i === 0,
+          onClick: () => {
+            const a = settings.stages;
+            [a[i - 1], a[i]] = [a[i], a[i - 1]];
+            drawStages();
+          } }, '↑'),
+        el('button', { class: 'btn-sm btn-ghost btn-danger', type: 'button',
+          onClick: () => { settings.stages.splice(i, 1); drawStages(); } }, '✕'),
+      ));
+    });
+
+    stageWrap.append(el('div', { class: 'btn-row', style: 'margin-top:8px' },
+      el('button', { class: 'btn-sm', type: 'button', onClick: () => {
+        settings.stages = settings.stages || [];
+        settings.stages.push('Tahap baru');
+        drawStages();
+      } }, '+ Tambah tahap'),
+    ));
+  }
+  drawStages();
+
+  const stagePanel = el('div', { class: 'panel' },
+    el('div', { class: 'panel-head' }, el('h3', { text: 'Tahap alur kerja' })),
+    el('p', { class: 'small faint',
+      text: 'Titik-titik di kartu pasien. Ketuk titik untuk menandai kemajuan; '
+          + 'otomatis kembali kosong setiap hari baru. '
+          + 'Kosongkan daftar ini untuk menyembunyikan pelacak sepenuhnya.' }),
+    stageWrap,
+    el('div', { class: 'btn-row', style: 'margin-top:12px' },
+      el('button', { class: 'btn-primary', onClick: async () => {
+        settings.stages = (settings.stages || []).filter(x => String(x).trim());
+        await saveSettings(settings);
+        ctx.settings = settings;
+        toast('Tahap disimpan');
+      } }, 'Simpan tahap'),
+    ),
+  );
+
   /* ═══ About ═══ */
   const aboutPanel = el('div', { class: 'panel' },
     el('div', { class: 'panel-head' }, el('h3', { text: 'Tentang' })),
@@ -304,7 +354,7 @@ export function renderSettings(ctx) {
     el('button', { class: 'btn-sm btn-ghost', style: 'margin-bottom:8px',
       onClick: () => navigate({ route: 'patients' }) }, '← Daftar pasien'),
     el('h2', { text: 'Pengaturan' }),
-    templatePanel, greetingPanel, aboutPanel,
+    templatePanel, stagePanel, greetingPanel, aboutPanel,
   );
 
   mount(root);

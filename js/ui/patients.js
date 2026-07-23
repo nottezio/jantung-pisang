@@ -6,6 +6,7 @@ import { listPatients } from '../store.js';
 import { mount, loading, showError } from './shell.js';
 import { openPatientForm } from './patient-form.js';
 import { navigate } from '../app.js';
+import { stageTrack } from './stage.js';
 
 const SORTS = {
   room: {
@@ -30,7 +31,10 @@ const SORTS = {
 let sortKey = 'room';
 let showDischarged = false;
 
-export async function renderPatients() {
+let CTX = null;
+
+export async function renderPatients(ctx) {
+  if (ctx) CTX = ctx;
   loading('Memuat daftar pasien…');
   let patients;
   try {
@@ -100,8 +104,11 @@ function patientCard(p) {
   const hari = computeHariPerawatan(p.admissionDate);
   const utama = (p.dpjp || []).find(d => /utama/i.test(d.role || '')) || (p.dpjp || [])[0];
 
-  return el('button', {
-    class: 'card tappable',
+  // The card is a div, not a button: the stage dots are themselves
+  // buttons, and nesting interactive elements is invalid and breaks
+  // keyboard navigation.
+  const body = el('button', {
+    class: 'card-body-btn',
     onClick: () => navigate({ route: 'patient', id: p.id }),
   },
     el('div', { class: 'pt-name', text: p.name || '(tanpa nama)' }),
@@ -122,4 +129,13 @@ function patientCard(p) {
       p.followUpExempt && el('span', { class: 'chip', text: 'tanpa FU harian' }),
     ),
   );
+
+  const card = el('div', { class: 'card' }, body);
+
+  const track = CTX && !p.disposition
+    ? stageTrack(p, CTX, { compact: true })
+    : null;
+  if (track) card.append(track);
+
+  return card;
 }

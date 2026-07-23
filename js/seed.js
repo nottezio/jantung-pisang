@@ -84,6 +84,18 @@ export const DEFAULT_SETTINGS = {
   // Blank report formats for manual copying. Plain text, no
   // rendering. Seeded empty — the user pastes in their own.
   formats: [],
+
+  // Workflow stages, as DATA so they can be renamed or trimmed in
+  // Pengaturan without a code change. A profile with an empty array
+  // hides the tracker entirely (Phase 5).
+  stages: [
+    'SOAP dibuat',
+    'Kirim ke Chief',
+    'SOAP dikoreksi',
+    'Lapor DPJP',
+    'Input SIMGOS',
+    'Plan & terapi dilaksanakan',
+  ],
 };
 
 export const INVESTIGATION_TYPES = [

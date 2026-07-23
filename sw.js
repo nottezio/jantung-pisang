@@ -37,6 +37,8 @@ const SHELL = [
   './js/ui/preview.js',
   './js/ui/settings.js',
   './js/ui/formats.js',
+  './js/ui/stage.js',
+  './js/ui/sidebyside.js',
 ];
 
 self.addEventListener('install', (e) => {

@@ -153,7 +153,7 @@ export function openSoapEditor({ patient, ctx, draft, existingId = null, onSaved
       toast('Entri disimpan');
       onSaved?.();
       if (thenPreview) {
-        openPreview({ patient, entry, template: ctx.template, settings: ctx.settings });
+        openPreview({ patient, entry, template: ctx.template, settings: ctx.settings, ctx });
       }
     } catch (ex) {
       err.textContent = `Gagal menyimpan: ${ex?.message || ex}`;

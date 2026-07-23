@@ -18,6 +18,8 @@ import { openPatientForm } from './patient-form.js';
 import { investigationList } from './investigations.js';
 import { openSoapEditor } from './soap-editor.js';
 import { navigate } from '../app.js';
+import { stageTrack } from './stage.js';
+import { openSideBySide } from './sidebyside.js';
 
 export async function renderPatientDetail(id, ctx) {
   loading('Memuat pasien…');
@@ -75,6 +77,13 @@ function draw(patient, entries, ctx) {
       : null,
   );
 
+  // Workflow tracker. Hidden for discharged patients — there is no
+  // daily loop left to track.
+  if (!patient.disposition) {
+    const track = stageTrack(patient, ctx);
+    if (track) identity.append(el('div', { style: 'margin-top:10px' }, track));
+  }
+
   /* ── SOAP entries: the reason this screen exists ── */
   const latest = entries[0];
   const todayHasEntry = entries.some(e => e.date === isoDate());
@@ -89,6 +98,13 @@ function draw(patient, entries, ctx) {
         onSaved: () => refresh(patient, ctx),
       }),
     }, '⭐ SOAP hari ini (salin kemarin)'));
+  }
+  if (latest) {
+    actions.append(el('button', {
+      onClick: () => openSideBySide({
+        patient, entry: latest, template: ctx.template, ctx,
+      }),
+    }, 'Susun dengan format'));
   }
   actions.append(el('button', {
     class: latest ? '' : 'btn-primary',

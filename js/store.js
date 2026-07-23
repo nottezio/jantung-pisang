@@ -55,7 +55,8 @@ export const BLANK_PATIENT = () => ({
   admissionShift: suggestShift(),
   assignedTo: '',
   followUpExempt: false,
-  stage: null,                 // Phase 3
+  stage: 0,                    // 0 = belum mulai; index into settings.stages
+  stageDate: null,             // ISO date the stage was last touched
   disposition: null,           // Phase 1 writes this; Phase 5 generalises it
   investigations: [],          // MASTER list — hard requirement #4
 });
@@ -98,6 +99,26 @@ export async function deletePatient(id) {
   const entries = await listEntries(id);
   await Promise.all(entries.map(e => deleteDoc(doc(db, 'soapEntries', e.id))));
   await deleteDoc(doc(db, 'patients', id));
+}
+
+/* ── Workflow stage ──────────────────────────────────────────
+   The stage is a daily cycle: it resets every morning. Rather than
+   hooking entry creation to clear it, the stage is stamped with the
+   date it was set and simply reads as 0 on any later day. No
+   scheduled job, no migration, correct across timezones and after
+   the app has been closed for a week. */
+
+export function effectiveStage(patient, today) {
+  if (!patient?.stageDate) return 0;
+  return patient.stageDate === today ? (patient.stage || 0) : 0;
+}
+
+export async function setStage(patient, stage, today) {
+  const next = { ...patient, stage, stageDate: today };
+  await updatePatient(patient.id, next);
+  patient.stage = stage;
+  patient.stageDate = today;
+  return next;
 }
 
 /* ── Investigations live on the patient document ─────────────
