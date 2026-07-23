@@ -15,6 +15,7 @@
 import { el, clear, copyText, toast, stripWaMarkup } from '../util.js';
 import { listPatients, listEntries } from '../store.js';
 import { reformat, LAYOUTS } from '../reformat-engine.js';
+import { formattedBox } from './formatted-box.js';
 import { mount, loading, showError } from './shell.js';
 import { navigate } from '../app.js';
 
@@ -37,13 +38,13 @@ function draw(patients) {
   const formats = CTX?.settings?.formats || [];
 
   /* ── Source pane ── */
-  const sourceBox = el('textarea', {
-    class: 'preview-box',
-    spellcheck: 'false',
-    style: 'min-height:420px',
+  const srcFb = formattedBox({
+    value: '',
+    minHeight: '420px',
+    label: 'Catatan sumber',
     placeholder: 'Tempel catatan lama di sini, atau ambil dari pasien di atas…',
-    'aria-label': 'Catatan sumber',
-  }, '');
+  });
+  const sourceBox = srcFb.textView;
 
   const patientPicker = el('select', {
     'aria-label': 'Ambil dari pasien',
@@ -55,15 +56,15 @@ function draw(patients) {
         e.target.value = '';
         return;
       }
-      sourceBox.value = 'Memuat…';
+      srcFb.set('Memuat…');
       try {
         const entries = await listEntries(id);
         const latest = entries[0];
-        sourceBox.value = latest
+        srcFb.set(latest
           ? String(latest.sections?.note ?? '')
-          : '(pasien ini belum punya catatan)';
+          : '(pasien ini belum punya catatan)');
       } catch (err) {
-        sourceBox.value = `(gagal memuat: ${err?.code || err?.message})`;
+        srcFb.set(`(gagal memuat: ${err?.code || err?.message})`);
       }
     },
   },
@@ -77,22 +78,22 @@ function draw(patients) {
       el('h3', { text: 'Sumber' }),
       el('span', { class: 'spacer' }),
       el('button', { class: 'btn-sm btn-ghost',
-        onClick: () => { sourceBox.value = ''; sourceBox.focus(); } }, 'Bersihkan'),
+        onClick: () => { srcFb.set(''); srcFb.setRendered(false); srcFb.focus(); } }, 'Bersihkan'),
     ),
     patients.length ? el('div', { class: 'field' }, patientPicker) : null,
-    sourceBox,
+    srcFb.node,
   );
 
   /* ── Target pane ── */
-  const targetBox = el('textarea', {
-    class: 'preview-box',
-    spellcheck: 'false',
-    style: 'min-height:420px',
+  const tgtFb = formattedBox({
+    value: '',
+    minHeight: '420px',
+    label: 'Hasil',
     placeholder: formats.length
       ? 'Pilih format di atas, lalu susun dari sumber di kiri…'
       : 'Belum ada format tersimpan. Tambahkan lewat menu Format.',
-    'aria-label': 'Format tujuan',
-  }, '');
+  });
+  const targetBox = tgtFb.textView;
 
   /* ── Automatic transform ──────────────────────────────────
      Moves recognised blocks into the target layout. Everything it
@@ -112,7 +113,7 @@ function draw(patients) {
       const src = sourceBox.value.trim();
       if (!src) { toast('Isi dulu catatan sumber di kiri.'); sourceBox.focus(); return; }
       const r = reformat(src, layoutPicker.value);
-      targetBox.value = r.text;
+      tgtFb.set(r.text);
       const bits = [`${r.placed} blok dipindahkan`];
       if (r.dropped.length) bits.push(`${r.dropped.length} tidak disertakan`);
       if (r.unplaced.length) bits.push(`${r.unplaced.length} belum ditempatkan`);
@@ -132,7 +133,7 @@ function draw(patients) {
         e.target.value = '';
         return;
       }
-      targetBox.value = f.body || '';
+      tgtFb.set(f.body || '');
     },
   },
     el('option', { value: '' }, formats.length ? '— pilih format —' : '(belum ada format)'),
@@ -178,7 +179,7 @@ function draw(patients) {
       el('div', { class: 'small faint', style: 'margin-bottom:4px',
         text: 'atau mulai dari format kosong:' }),
       formatPicker),
-    targetBox,
+    tgtFb.node,
     el('div', { class: 'btn-row', style: 'margin-top:8px' }, plainBtn, waBtn),
   );
 
@@ -199,6 +200,6 @@ function draw(patients) {
 
   if (formats.length === 1) {
     formatPicker.value = formats[0].id;
-    targetBox.value = formats[0].body || '';
+    tgtFb.set(formats[0].body || '');
   }
 }

@@ -484,3 +484,58 @@ dialog.sbs-dialog { width: min(1180px, calc(100vw - 24px)); }
   .dpjp-name { font-size: .82rem; }
   .dpjp-row { gap: 6px; padding: 6px; }
 }
+
+/* ── Segmented toggle (Teks / Tampilan WA) ───────────────── */
+
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 8px;
+  background: var(--surface);
+}
+.seg-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: .84rem;
+  font-weight: 600;
+}
+.seg-btn + .seg-btn { border-left: 1px solid var(--line); }
+.seg-btn:hover { background: var(--surface-alt); }
+.seg-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+:root[data-theme="dark"] .seg-btn.active { color: #10201F; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .seg-btn.active { color: #10201F; }
+}
+
+/* ── Rendered WhatsApp view ──────────────────────────────── */
+
+.wa-render {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  padding: 10px 12px;
+  /* Sans, not mono: this view answers "does it read right?",
+     which is a different question from "are the characters right?" */
+  font-family: var(--font);
+  font-size: .92rem;
+  line-height: 1.55;
+  background: var(--surface-alt);
+  cursor: text;
+  user-select: text;
+}
+.wa-render b { font-weight: 680; }
+.wa-render i { font-style: italic; }
+.wa-render s { text-decoration: line-through; opacity: .7; }
+.wa-render code {
+  font-family: var(--mono); font-size: .86em;
+  background: var(--paper); padding: 1px 4px; border-radius: 3px;
+}

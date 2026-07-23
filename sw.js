@@ -29,6 +29,7 @@ const SHELL = [
   './js/app.js',
   './js/sections/index.js',
   './js/ui/shell.js',
+  './js/ui/formatted-box.js',
   './js/ui/auth.js',
   './js/ui/patients.js',
   './js/ui/patient-form.js',

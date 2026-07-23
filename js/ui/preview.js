@@ -13,6 +13,7 @@ import { el, copyText, toast, stripWaMarkup } from '../util.js';
 import { renderReport } from '../render.js';
 import { openDialog } from './shell.js';
 import { openSideBySide } from './sidebyside.js';
+import { formattedBox } from './formatted-box.js';
 
 export function openPreview({ patient, entry, template, settings, ctx }) {
   const { body, foot, close } = openDialog('Pratinjau laporan', { wide: true });
@@ -31,24 +32,25 @@ export function openPreview({ patient, entry, template, settings, ctx }) {
     return;
   }
 
-  const box = el('textarea', {
-    class: 'preview-box',
-    spellcheck: 'false',
-    'aria-label': 'Teks laporan, dapat diubah sebelum disalin',
-  }, result.text);
-
   const counter = el('div', { class: 'small faint' });
   const updateCounter = () => {
-    counter.textContent = `${box.value.length} karakter`;
+    counter.textContent = `${fb.get().length} karakter`;
   };
-  box.addEventListener('input', updateCounter);
+
+  const fb = formattedBox({
+    value: result.text,
+    label: 'Teks laporan, dapat diubah sebelum disalin',
+    minHeight: '380px',
+    onInput: updateCounter,
+  });
+  const box = fb.textView;      // copy handlers read the plain text
   updateCounter();
 
   body.append(
     el('div', { class: 'small faint', style: 'margin-bottom:8px' },
-      'Ubah seperlunya di sini. Perubahan hanya berlaku untuk pesan ini, '
-      + 'tidak mengubah data entri.'),
-    box,
+      'Ubah seperlunya di Teks. "Tampilan WA" memperlihatkan hasil akhirnya '
+      + 'tanpa mengubah isi. Perubahan di sini tidak mengubah data entri.'),
+    fb.node,
     counter,
   );
 
@@ -90,13 +92,13 @@ export function openPreview({ patient, entry, template, settings, ctx }) {
       }),
     }, 'Susun dengan format') : null,
     el('button', {
-      onClick: () => { box.value = result.text; updateCounter(); },
+      onClick: () => { fb.set(result.text); updateCounter(); },
     }, 'Kembalikan'),
     el('button', { onClick: close }, 'Tutup'),
     copyPlain,
     copyWa,
   );
 
-  box.focus();
+  fb.focus();
   box.setSelectionRange(0, 0);
 }

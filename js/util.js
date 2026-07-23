@@ -186,6 +186,34 @@ export function stripWaMarkup(text) {
     .replace(/~([^~\n]+)~/g, '$1');
 }
 
+/* ── WhatsApp markup → HTML, for display only ────────────────
+   The plain text stays the source of truth. This never writes back
+   to the stored note: a formatted view that silently re-serialises
+   its own HTML would corrupt exactly the asterisks the report
+   depends on.
+
+   Escaping happens FIRST, so a note containing "<0.01" or an
+   ampersand renders as text and can never inject markup. */
+
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export function waToHtml(text) {
+  let out = escapeHtml(text);
+  // Same conservative pairing as stripWaMarkup: markers must open
+  // and close on one line, so a lone asterisk in a dose survives.
+  out = out.replace(/\*([^*\n]+)\*/g, '<b>$1</b>');
+  out = out.replace(/_([^_\n]+)_/g, '<i>$1</i>');
+  out = out.replace(/~([^~\n]+)~/g, '<s>$1</s>');
+  out = out.replace(/```([^`\n]+)```/g, '<code>$1</code>');
+  return out;
+}
+
 export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);

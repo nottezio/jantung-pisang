@@ -14,6 +14,7 @@
 import { el, clear, copyText, toast, stripWaMarkup } from '../util.js';
 import { openDialog } from './shell.js';
 import { renderReport } from '../render.js';
+import { formattedBox } from './formatted-box.js';
 
 export function openSideBySide({ patient, entry, template, ctx, initialText }) {
   const { dialog, body, foot, close } = openDialog('Susun dengan format', { wide: true });
@@ -29,13 +30,11 @@ export function openSideBySide({ patient, entry, template, ctx, initialText }) {
   const formats = ctx.settings?.formats || [];
 
   /* ── Left: the SOAP, selectable ── */
-  const soapBox = el('textarea', {
-    class: 'preview-box',
-    spellcheck: 'false',
-    readonly: true,
-    'aria-label': 'SOAP pasien',
-    style: 'min-height:340px;background:var(--surface-alt)',
-  }, soapText);
+  const srcFb = formattedBox({
+    value: soapText, readonly: true, minHeight: '340px',
+    label: 'Catatan lama',
+  });
+  const soapBox = srcFb.textView;
 
   const copySoap = el('button', {
     class: 'btn-sm',
@@ -51,21 +50,19 @@ export function openSideBySide({ patient, entry, template, ctx, initialText }) {
       el('span', { class: 'spacer' }),
       copySoap,
     ),
-    soapBox,
+    srcFb.node,
     el('div', { class: 'small faint', style: 'margin-top:6px',
       text: 'Sorot bagian yang dibutuhkan, salin, lalu tempel di kanan.' }),
   );
 
   /* ── Right: the target format, editable ── */
-  const targetBox = el('textarea', {
-    class: 'preview-box',
-    spellcheck: 'false',
-    'aria-label': 'Format tujuan',
-    style: 'min-height:340px',
+  const tgtFb = formattedBox({
+    value: '', minHeight: '340px', label: 'Format tujuan',
     placeholder: formats.length
       ? 'Pilih format di atas, lalu isi dari SOAP di kiri…'
       : 'Belum ada format tersimpan. Tambahkan lewat menu Format.',
-  }, '');
+  });
+  const targetBox = tgtFb.textView;
 
   const picker = el('select', {
     'aria-label': 'Pilih format',
@@ -77,7 +74,7 @@ export function openSideBySide({ patient, entry, template, ctx, initialText }) {
         e.target.value = '';
         return;
       }
-      targetBox.value = f.body || '';
+      tgtFb.set(f.body || '');
     },
   },
     el('option', { value: '' }, formats.length ? '— pilih format —' : '(belum ada format)'),
@@ -114,7 +111,7 @@ export function openSideBySide({ patient, entry, template, ctx, initialText }) {
       el('span', { class: 'spacer' }),
       picker,
     ),
-    targetBox,
+    tgtFb.node,
     el('div', { class: 'btn-row', style: 'margin-top:6px' }, plainBtn, waBtn),
   );
 
@@ -125,6 +122,6 @@ export function openSideBySide({ patient, entry, template, ctx, initialText }) {
   // choice that has one answer.
   if (formats.length === 1) {
     picker.value = formats[0].id;
-    targetBox.value = formats[0].body || '';
+    tgtFb.set(formats[0].body || '');
   }
 }

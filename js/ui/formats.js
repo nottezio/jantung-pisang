@@ -14,6 +14,7 @@
 import { el, clear, copyText, toast, uid, stripWaMarkup } from '../util.js';
 import { openDialog, confirmDialog } from './shell.js';
 import { saveSettings } from '../store.js';
+import { formattedBox } from './formatted-box.js';
 
 export function openFormatLibrary(ctx) {
   const { body, foot, close } = openDialog('Format laporan', { wide: true });
@@ -74,12 +75,12 @@ export function openFormatLibrary(ctx) {
   function showFormat(f) {
     clear(viewPane);
 
-    const box = el('textarea', {
-      class: 'preview-box',
-      spellcheck: 'false',
-      style: 'min-height:300px',
-      'aria-label': `Format ${f.name}`,
-    }, f.body || '');
+    const fb = formattedBox({
+      value: f.body || '',
+      minHeight: '300px',
+      label: `Format ${f.name}`,
+    });
+    const box = fb.textView;
 
     async function doCopy(btn, transform, msg) {
       const ok = await copyText(transform(box.value));
@@ -111,7 +112,7 @@ export function openFormatLibrary(ctx) {
       ),
       el('div', { class: 'small faint', style: 'margin-bottom:8px',
         text: 'Boleh diubah di sini sebelum disalin. Perubahan tidak tersimpan.' }),
-      box,
+      fb.node,
       el('div', { class: 'btn-row', style: 'margin-top:10px' },
         plainBtn, waBtn),
     );
@@ -132,13 +133,14 @@ export function openFormatLibrary(ctx) {
       onInput: (e) => { draft.name = e.target.value; },
     });
 
-    const bodyInput = el('textarea', {
-      class: 'preview-box',
-      spellcheck: 'false',
-      style: 'min-height:320px',
+    const bodyFb = formattedBox({
+      value: draft.body,
+      minHeight: '320px',
+      label: 'Isi format',
       placeholder: 'Tempel format laporan kosong di sini…',
-      onInput: (e) => { draft.body = e.target.value; },
-    }, draft.body);
+      onInput: (v) => { draft.body = v; },
+    });
+    const bodyInput = bodyFb.node;
 
     d.body.append(
       el('div', { class: 'field' }, el('label', { text: 'Nama format' }), nameInput),
