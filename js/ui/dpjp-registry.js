@@ -34,9 +34,9 @@ function draw(list) {
     list.length === 0 ? el('button', {
       onClick: async () => {
         const ok = await confirmDialog('Isi daftar awal',
-          `Tambahkan ${DPJP_SEED.length} DPJP dengan cara lapor yang sudah diketahui?\n\n`
-          + 'Sebagian besar nama masih kosong dan perlu diisi sendiri — '
-          + 'hanya inisial dan cara lapor yang terisi.',
+          `Tambahkan ${DPJP_SEED.length} DPJP dari daftar?\n\n`
+          + 'Cara lapor untuk 10 DPJP sudah diketahui; sisanya diisi '
+          + '"Lewat Chief" dan ditandai "?" sampai dikonfirmasi.',
           'Tambahkan');
         if (!ok) return;
         try {
@@ -61,52 +61,64 @@ function draw(list) {
     onClick: () => navigate({ route: 'patients' }),
   }, '← Daftar pasien');
 
+  const rows = el('div', { class: 'dpjp-list' }, ...list.map(dpjpRow));
+  const search = el('input', {
+    type: 'search', placeholder: 'Cari nama atau inisial…',
+    style: 'margin-bottom:10px',
+    onInput: (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      rows.replaceChildren(...list
+        .filter(d => !q
+          || (d.name || '').toLowerCase().includes(q)
+          || (d.initial || '').toLowerCase().includes(q))
+        .map(dpjpRow));
+    },
+  });
+
   const body = list.length
-    ? el('div', {}, ...list.map(dpjpRow))
+    ? el('div', {}, list.length > 8 ? search : null, rows)
     : el('div', { class: 'empty' },
         el('h3', { text: 'Belum ada DPJP tersimpan' }),
         el('p', { class: 'small', text:
           'Tambahkan DPJP untuk mengingat cara melapor ke masing-masing — '
           + 'lewat Chief, PDF, atau langsung PC.' }),
         el('p', { class: 'small faint', text:
-          '"Isi daftar awal" menambahkan cara lapor yang sudah diketahui; '
-          + 'nama diisi sendiri.' }),
+          '"Isi daftar awal" menambahkan 24 DPJP beserta inisialnya. '
+          + 'Cara lapor yang belum dikonfirmasi ditandai dengan "?".' }),
       );
 
   mount(el('div', {}, back, toolbar, body));
 }
 
+const CHANNEL_SHORT = {
+  viaChief: 'Chief', viaChiefPDF: 'Chief+PDF',
+  pcAndGrup: 'PC+Grup', pcOnly: 'PC',
+};
+
+/* One line per DPJP. A 24-row registry read on a phone during
+   rounds is a lookup, not a browse — density beats decoration. */
 function dpjpRow(d) {
-  const unnamed = !String(d.name || '').trim();
-  return el('div', { class: 'panel', style: 'margin-bottom:10px' },
-    el('div', { class: 'panel-head' },
-      el('div', { style: 'flex:1;min-width:0' },
-        el('div', {},
-          el('strong', { text: d.name || `(${d.initial || '?'} — nama belum diisi)`,
-            style: unnamed ? 'color:var(--stage-early)' : '' }),
-          d.initial ? el('span', { class: 'faint small', text: ` (${d.initial})` }) : null,
-        ),
-        d.titles ? el('div', { class: 'small faint', text: d.titles }) : null,
-      ),
-      el('button', { class: 'btn-sm btn-ghost',
-        onClick: () => openDpjpForm(d, () => renderDpjpRegistry()) }, 'Ubah'),
-      el('button', { class: 'btn-sm btn-ghost btn-danger',
-        onClick: async () => {
-          const ok = await confirmDialog('Hapus DPJP', `Hapus ${d.name} dari daftar?`);
-          if (!ok) return;
-          await deleteDpjp(d.id);
-          toast('DPJP dihapus');
-          renderDpjpRegistry();
-        } }, 'Hapus'),
-    ),
-    el('div', { class: 'pt-foot' },
-      el('span', { class: 'chip chip-accent', text: channelLabel(d.reportChannel) }),
-      d.needsPDF ? el('span', { class: 'chip', text: 'Perlu PDF' }) : null,
-      (d.mrDays || []).length
-        ? el('span', { class: 'chip', text: `MR: ${d.mrDays.join(', ')}` })
-        : null,
-    ),
-    d.notes ? el('div', { class: 'small', style: 'margin-top:8px', text: d.notes }) : null,
+  const unconfirmed = d.channelKnown === false;
+  return el('div', { class: 'dpjp-row' },
+    el('span', { class: 'dpjp-ini', text: d.initial || '?' }),
+    el('span', { class: 'dpjp-name', title: d.name || '', text: d.name || '(tanpa nama)' }),
+    el('span', {
+      class: 'chip' + (unconfirmed ? '' : ' chip-accent'),
+      style: 'flex:none',
+      title: unconfirmed ? 'Cara lapor belum dikonfirmasi' : channelLabel(d.reportChannel),
+      text: (CHANNEL_SHORT[d.reportChannel] || d.reportChannel) + (unconfirmed ? '?' : ''),
+    }),
+    d.needsPDF ? el('span', { class: 'chip', style: 'flex:none', text: 'PDF' }) : null,
+    el('button', { class: 'btn-sm btn-ghost', style: 'flex:none',
+      onClick: () => openDpjpForm(d, () => renderDpjpRegistry()) }, 'Ubah'),
+    el('button', { class: 'btn-sm btn-ghost btn-danger', style: 'flex:none',
+      onClick: async () => {
+        const ok = await confirmDialog('Hapus DPJP', `Hapus ${d.name || d.initial}?`);
+        if (!ok) return;
+        await deleteDpjp(d.id);
+        toast('DPJP dihapus');
+        renderDpjpRegistry();
+      } }, '✕'),
   );
 }
 

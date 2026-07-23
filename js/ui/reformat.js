@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────
 import { el, clear, copyText, toast, stripWaMarkup } from '../util.js';
 import { listPatients, listEntries } from '../store.js';
+import { reformat, LAYOUTS } from '../reformat-engine.js';
 import { mount, loading, showError } from './shell.js';
 import { navigate } from '../app.js';
 
@@ -93,6 +94,34 @@ function draw(patients) {
     'aria-label': 'Format tujuan',
   }, '');
 
+  /* ── Automatic transform ──────────────────────────────────
+     Moves recognised blocks into the target layout. Everything it
+     emits came from the source; anything it cannot classify is
+     appended under a warning heading rather than dropped. */
+  const layoutPicker = el('select', {
+    'aria-label': 'Format tujuan otomatis',
+    style: 'flex:1',
+  }, ...Object.values(LAYOUTS).map(l =>
+    el('option', { value: l.id, selected: l.id === 'bangsal' }, l.name)));
+
+  const report = el('div', { class: 'small faint', style: 'margin-top:6px' });
+
+  const autoBtn = el('button', {
+    class: 'btn-primary',
+    onClick: () => {
+      const src = sourceBox.value.trim();
+      if (!src) { toast('Isi dulu catatan sumber di kiri.'); sourceBox.focus(); return; }
+      const r = reformat(src, layoutPicker.value);
+      targetBox.value = r.text;
+      const bits = [`${r.placed} blok dipindahkan`];
+      if (r.dropped.length) bits.push(`${r.dropped.length} tidak disertakan`);
+      if (r.unplaced.length) bits.push(`${r.unplaced.length} belum ditempatkan`);
+      report.textContent = bits.join(' · ') + ' — periksa hasilnya sebelum disalin.';
+      report.style.color = r.unplaced.length ? 'var(--stage-early)' : '';
+      targetBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    },
+  }, '⇄ Ubah otomatis');
+
   const formatPicker = el('select', {
     'aria-label': 'Pilih format tujuan',
     onChange: (e) => {
@@ -138,7 +167,17 @@ function draw(patients) {
       el('h3', { text: 'Hasil' }),
       el('span', { class: 'spacer' }),
     ),
-    el('div', { class: 'field' }, formatPicker),
+    el('div', { class: 'panel', style: 'padding:10px;margin-bottom:10px' },
+      el('div', { class: 'small', style: 'font-weight:600;margin-bottom:6px',
+        text: 'Ubah otomatis' }),
+      el('div', { style: 'display:flex;gap:8px;align-items:center' },
+        layoutPicker, autoBtn),
+      report,
+    ),
+    el('div', { class: 'field' },
+      el('div', { class: 'small faint', style: 'margin-bottom:4px',
+        text: 'atau mulai dari format kosong:' }),
+      formatPicker),
     targetBox,
     el('div', { class: 'btn-row', style: 'margin-top:8px' }, plainBtn, waBtn),
   );
@@ -151,9 +190,9 @@ function draw(patients) {
 
     el('h2', { text: 'Ubah format' }),
     el('p', { class: 'small faint', style: 'margin-top:0' },
-      'Sorot bagian yang dibutuhkan di kiri, salin, tempel di kanan. '
-      + 'Tidak ada pemindahan otomatis — periksa sendiri terapi yang sudah '
-      + 'selesai, pemeriksaan baru, dan rencana yang berubah.'),
+      'Tempel catatan di kiri, lalu "Ubah otomatis" untuk memindahkannya '
+      + 'ke susunan format lain. Isi tetap milik Anda — aplikasi hanya '
+      + 'memindahkan, tidak menulis. Periksa hasilnya sebelum disalin.'),
 
     el('div', { class: 'sbs' }, left, right),
   ));

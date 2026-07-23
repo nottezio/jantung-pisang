@@ -110,26 +110,64 @@ export const REPORT_CHANNELS = [
   { value: 'pcOnly',      label: 'PC saja' },
 ];
 
-/* Seed for the DPJP registry.
-   Channel assignments come from the person's own observed list.
-   NAMES ARE DELIBERATELY BLANK except where a real document
-   confirmed them — inventing an attending's name would put a
-   fabricated doctor on a clinical report. The initial is the key;
-   the user fills the name in once, in the app. */
+/* Seed for the DPJP registry — names and initials from the person's
+   own list. Initials in brackets were absent from the source for a
+   few entries and are derived from the name; they are editable.
+
+   channelKnown marks the ten whose reporting route was actually
+   observed. The rest default to 'viaChief' because going through
+   the Chief is never wrong, only slower — a wrong direct-contact
+   guess is worse than a conservative one. Unconfirmed entries are
+   flagged in the UI. */
 export const DPJP_SEED = [
-  { initial: 'AFM', name: '', reportChannel: 'viaChiefPDF', needsPDF: true },
-  { initial: 'ZD',  name: '', reportChannel: 'viaChiefPDF', needsPDF: true },
-  { initial: 'AFG', name: '', reportChannel: 'viaChiefPDF', needsPDF: true },
-  { initial: 'AHN', name: '', reportChannel: 'viaChief',    needsPDF: false },
-  { initial: 'KS',  name: '', reportChannel: 'pcAndGrup',   needsPDF: false },
-  { initial: 'PT',  name: 'dr. Pendrik Tandean, Sp.PD, KKV',
-    reportChannel: 'pcAndGrup', needsPDF: false },
-  { initial: 'PK',  name: '', reportChannel: 'pcAndGrup',   needsPDF: false },
-  { initial: 'MZ',  name: '', reportChannel: 'pcAndGrup',   needsPDF: false },
-  { initial: 'Rio', name: 'dr. Rio', reportChannel: 'pcAndGrup', needsPDF: false },
-  { initial: 'IM',  name: '', reportChannel: 'pcOnly',      needsPDF: false },
-  { initial: 'MAA', name: 'dr. Muhammad Asrul Apris, Sp.JP (K)',
-    reportChannel: 'pcOnly', needsPDF: false },
+  { initial: 'PK', name: 'Prof. dr. Peter Kabo, Ph.D, Sp.FK, Sp.JP(K)',
+    reportChannel: 'pcAndGrup', needsPDF: false, channelKnown: true },
+  { initial: 'MZ', name: 'Prof. Dr. dr. Muzakkir Amir, Sp.JP(K)',
+    reportChannel: 'pcAndGrup', needsPDF: false, channelKnown: true },
+  { initial: 'IM', name: 'Prof. Dr. dr. Idar Mappangara, Sp.PD, Sp.JP(K)',
+    reportChannel: 'pcOnly', needsPDF: false, channelKnown: true },
+  { initial: 'AHA', name: 'Dr. dr. Abdul Hakim Alkatiri, Sp.JP(K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'ZD', name: 'dr. Zaenab Djafar, M.Kes, Sp.PD, Sp.JP, Subsp.PRKV(K)',
+    reportChannel: 'viaChiefPDF', needsPDF: true, channelKnown: true },
+  { initial: 'AFM', name: 'Dr. dr. Akhtar Fajar Muzakkir, Sp.JP, Subsp. IKKV(K), KI(K)',
+    reportChannel: 'viaChiefPDF', needsPDF: true, channelKnown: true },
+  { initial: 'AHN', name: 'Dr. dr. Az Hafid Nashar, Sp.JP(K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: true },
+  { initial: 'AFG', name: 'dr. Aussie Fitriani Ghaznawie, Sp.JP, Subsp.Eko (K)',
+    reportChannel: 'viaChiefPDF', needsPDF: true, channelKnown: true },
+  { initial: 'PT', name: 'dr. Pendrik Tandean, Sp.PD-KKV',
+    reportChannel: 'pcAndGrup', needsPDF: false, channelKnown: true },
+  { initial: 'KS', name: 'Dr. dr. Khalid Saleh, Sp.PD-KKV',
+    reportChannel: 'pcAndGrup', needsPDF: false, channelKnown: true },
+  { initial: 'SM', name: 'Dr. dr. Sumarni, Sp.JP, Subsp.Ar (K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'MAA', name: 'dr. Muhammad Asrul Apris, Sp.JP(K)',
+    reportChannel: 'pcOnly', needsPDF: false, channelKnown: true },
+  { initial: 'YP', name: 'Dr. dr. Yulius Patimang, Sp.A, Sp.JP(K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'AAU', name: 'dr. Andi Alief Utama Armyn, M.Kes, Sp.JP, Subsp. KPPJB (K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'FM', name: 'dr. Fadillah Maricar, Sp.JP (K), FIHA',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'AL', name: 'dr. Almudai, Sp.PD, Sp.JP(K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'IS', name: 'dr. Irmarisyani Sudirman, Sp.JP(K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'AA', name: 'dr. Amelia Arindanie, Sp.JP',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'BPP', name: 'dr. Bogie Putra Palinggi, Sp.JP (K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'FAT', name: 'dr. Frizt Alfred Tandean, Sp.JP(K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'ARB', name: 'dr. Andi Renata Bastario, Sp.JP(K)',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'NP', name: 'dr. Nurminsyah P., Sp.JP',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'MNM', name: 'dr. Muhammad Nuralim Mallapasi, Sp.B, Sp.BTKV(K)VE',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
+  { initial: 'JK', name: 'dr. Jayarasti Kusumanegara, Sp.BTKV(K)VE',
+    reportChannel: 'viaChief', needsPDF: false, channelKnown: false },
 ];
 
 export const DPJP_ROLES = [

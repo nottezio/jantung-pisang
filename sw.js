@@ -25,6 +25,7 @@ const SHELL = [
   './js/seed.js',
   './js/store.js',
   './js/render.js',
+  './js/reformat-engine.js',
   './js/app.js',
   './js/sections/index.js',
   './js/ui/shell.js',

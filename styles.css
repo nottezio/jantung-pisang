@@ -451,3 +451,36 @@ dialog.sbs-dialog { width: min(1180px, calc(100vw - 24px)); }
   font: inherit;
 }
 .card-body-btn:hover { background: transparent; }
+
+/* ── DPJP registry: dense rows ────────────────────────────── */
+
+.dpjp-list {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  overflow: hidden;
+}
+.dpjp-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  min-height: 46px;
+}
+.dpjp-row:last-child { border-bottom: 0; }
+.dpjp-row:hover { background: var(--surface-alt); }
+
+.dpjp-ini {
+  flex: none; min-width: 46px;
+  font-weight: 700; font-size: .8rem;
+  color: var(--accent-deep);
+  font-family: var(--mono);
+}
+.dpjp-name {
+  flex: 1; min-width: 0;
+  font-size: .88rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 640px) {
+  .dpjp-name { font-size: .82rem; }
+  .dpjp-row { gap: 6px; padding: 6px; }
+}
