@@ -539,3 +539,35 @@ dialog.sbs-dialog { width: min(1180px, calc(100vw - 24px)); }
   font-family: var(--mono); font-size: .86em;
   background: var(--paper); padding: 1px 4px; border-radius: 3px;
 }
+
+/* ── Reminder steps ──────────────────────────────────────── */
+
+.rem-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-height: var(--tap);
+}
+.rem-step:hover { background: var(--surface-alt); }
+.rem-step input {
+  width: 20px; height: 20px; min-height: 0; flex: none;
+  margin-top: 3px; accent-color: var(--accent);
+}
+.rem-num {
+  flex: none; min-width: 22px;
+  font-family: var(--mono); font-size: .78rem; font-weight: 700;
+  color: var(--ink-faint); padding-top: 3px;
+}
+.rem-text { flex: 1; min-width: 0; }
+
+.rem-step.done .rem-text { color: var(--ink-faint); text-decoration: line-through; }
+.rem-step.done .rem-num  { color: var(--stage-done); }
+
+/* The next action, not just the next row. */
+.rem-step.next {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.rem-step.next .rem-num { color: var(--accent-deep); }

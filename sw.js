@@ -25,6 +25,7 @@ const SHELL = [
   './js/seed.js',
   './js/store.js',
   './js/render.js',
+  './js/backup.js',
   './js/reformat-engine.js',
   './js/app.js',
   './js/sections/index.js',
@@ -43,6 +44,7 @@ const SHELL = [
   './js/ui/sidebyside.js',
   './js/ui/dpjp-registry.js',
   './js/ui/reformat.js',
+  './js/ui/reminders.js',
 ];
 
 self.addEventListener('install', (e) => {

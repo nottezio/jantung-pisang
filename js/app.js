@@ -13,6 +13,7 @@ import { renderSettings } from './ui/settings.js';
 import { openFormatLibrary } from './ui/formats.js';
 import { renderDpjpRegistry } from './ui/dpjp-registry.js';
 import { renderReformat } from './ui/reformat.js';
+import { renderReminders } from './ui/reminders.js';
 
 /* Shared, reloaded on sign-in and after template edits. */
 const ctx = { templates: [], template: null, settings: null };
@@ -40,6 +41,7 @@ function draw() {
     case 'settings': return renderSettings(ctx);
     case 'dpjp':     return renderDpjpRegistry();
     case 'reformat': return renderReformat(ctx);
+    case 'reminders': return renderReminders(ctx);
     default:         return renderPatients(ctx);
   }
 }

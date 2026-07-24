@@ -12,6 +12,10 @@ import { validateTemplate, referencedTags } from '../render.js';
 import { saveTemplate, saveSettings, duplicateTemplate, deleteTemplate } from '../store.js';
 import { mount, openDialog, confirmDialog } from './shell.js';
 import { seedTemplate } from '../seed.js';
+import {
+  exportAll, downloadBackup, validateBackup, summarise,
+  importAll, collectionLabel,
+} from '../backup.js';
 import { navigate } from '../app.js';
 
 // Slots provided by the engine rather than by a section.
@@ -341,6 +345,106 @@ export function renderSettings(ctx) {
     ),
   );
 
+  /* ═══ Backup ═══ */
+  const backupStatus = el('div', { class: 'small faint', style: 'margin-top:8px' });
+
+  const exportBtn = el('button', {
+    class: 'btn-primary',
+    onClick: async () => {
+      exportBtn.disabled = true;
+      exportBtn.textContent = 'Menyiapkan…';
+      try {
+        const backup = await exportAll();
+        const filename = downloadBackup(backup);
+        backupStatus.style.color = '';
+        backupStatus.textContent = `Tersimpan sebagai ${filename} — `
+          + Object.entries(backup.counts)
+              .map(([k, v]) => `${collectionLabel(k)}: ${v}`).join(' · ');
+        toast('Cadangan diunduh');
+      } catch (ex) {
+        backupStatus.style.color = 'var(--danger)';
+        backupStatus.textContent = `Gagal: ${ex?.code || ex?.message || ex}`;
+      }
+      exportBtn.disabled = false;
+      exportBtn.textContent = 'Unduh cadangan';
+    },
+  }, 'Unduh cadangan');
+
+  const fileInput = el('input', {
+    type: 'file', accept: 'application/json,.json',
+    style: 'display:none',
+    onChange: async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';                 // allow re-picking the same file
+      if (!file) return;
+      let raw;
+      try {
+        raw = JSON.parse(await file.text());
+      } catch {
+        backupStatus.style.color = 'var(--danger)';
+        backupStatus.textContent = 'File tidak bisa dibaca sebagai JSON.';
+        return;
+      }
+
+      const { ok: valid, problems } = validateBackup(raw);
+      if (!valid) {
+        backupStatus.style.color = 'var(--danger)';
+        backupStatus.textContent = `File ditolak: ${problems.join(' ')}`;
+        return;
+      }
+
+      const rows = summarise(raw);
+      const lines = rows.filter(r => r.count)
+        .map(r => `${collectionLabel(r.name)}: ${r.count}`).join('\n');
+      const ok = await confirmDialog('Pulihkan cadangan',
+        `File ini berisi:\n\n${lines || '(kosong)'}\n\n`
+        + 'Dokumen dengan id yang sama akan DITIMPA. '
+        + 'Data yang tidak ada di file ini tidak dihapus.\n\n'
+        + `Dibuat: ${raw.exportedAt?.slice(0, 10) || 'tidak diketahui'}`,
+        'Pulihkan');
+      if (!ok) return;
+
+      backupStatus.style.color = '';
+      try {
+        const res = await importAll(raw, {
+          onProgress: (done, total) => {
+            backupStatus.textContent = `Memulihkan ${done}/${total}…`;
+          },
+        });
+        if (res.failures.length) {
+          backupStatus.style.color = 'var(--stage-early)';
+          backupStatus.textContent =
+            `${res.restored}/${res.total} dipulihkan · ${res.failures.length} gagal `
+            + `(${res.failures[0].code})`;
+        } else {
+          backupStatus.textContent = `${res.restored} dokumen dipulihkan. Muat ulang halaman.`;
+        }
+        toast('Pemulihan selesai');
+      } catch (ex) {
+        backupStatus.style.color = 'var(--danger)';
+        backupStatus.textContent = `Gagal memulihkan: ${ex?.code || ex?.message || ex}`;
+      }
+    },
+  });
+
+  const backupPanel = el('div', { class: 'panel' },
+    el('div', { class: 'panel-head' }, el('h3', { text: 'Cadangan data' })),
+    el('p', { class: 'small faint',
+      text: 'Seluruh data aplikasi hanya ada di satu proyek Firebase. '
+          + 'Unduh cadangan secara berkala — file JSON ini bisa dipulihkan '
+          + 'kapan saja, termasuk ke akun baru.' }),
+    el('div', { class: 'btn-row' },
+      exportBtn,
+      el('button', { onClick: () => fileInput.click() }, 'Pulihkan dari file'),
+      fileInput,
+    ),
+    backupStatus,
+    el('p', { class: 'small faint', style: 'margin-bottom:0' },
+      '⛔ Hanya file cadangan dari aplikasi ini yang bisa dipulihkan. '
+      + 'Dokumen bebas (Word, teks) tidak bisa diimpor — risiko salah baca '
+      + 'pada rekam pasien terlalu besar.'),
+  );
+
   /* ═══ About ═══ */
   const aboutPanel = el('div', { class: 'panel' },
     el('div', { class: 'panel-head' }, el('h3', { text: 'Tentang' })),
@@ -354,7 +458,7 @@ export function renderSettings(ctx) {
     el('button', { class: 'btn-sm btn-ghost', style: 'margin-bottom:8px',
       onClick: () => navigate({ route: 'patients' }) }, '← Daftar pasien'),
     el('h2', { text: 'Pengaturan' }),
-    templatePanel, stagePanel, greetingPanel, aboutPanel,
+    templatePanel, stagePanel, greetingPanel, backupPanel, aboutPanel,
   );
 
   mount(root);

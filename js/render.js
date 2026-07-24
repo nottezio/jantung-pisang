@@ -82,7 +82,7 @@ export function buildContext({ patient, entry, template, settings, now = new Dat
       ? { ...patient.previousLocation, full: locationFull(patient.previousLocation) }
       : null,
     transferDate: formatDateID(patient?.transferDate),
-    dpjp: (patient?.dpjp || []).filter(d => d?.name),
+    dpjp: groupDpjpByName(patient?.dpjp),
     source: patient?.source?.dept || '',
     referringDoctor: patient?.source?.referringDoctor || '',
     hariPerawatan: computeHariPerawatan(patient?.admissionDate, now),
@@ -122,6 +122,40 @@ function falsyFor(type) {
     default:
       return '';
   }
+}
+
+/**
+ * One consultant holding several roles should be one line, not
+ * several: "DPJP Utama dan Tindakan : dr. X", never two lines
+ * naming the same person.
+ *
+ * Grouping is by name, and first-appearance order is preserved so
+ * Utama still leads. Subsequent roles drop their "DPJP " prefix so
+ * the label reads as a sentence rather than a list of headings.
+ */
+function groupDpjpByName(list) {
+  const byName = new Map();
+  for (const d of list || []) {
+    const name = String(d?.name || '').trim();
+    if (!name) continue;
+    if (!byName.has(name)) byName.set(name, { name, roles: [] });
+    const entry = byName.get(name);
+    const role = String(d.role || '').trim();
+    if (role && !entry.roles.includes(role)) entry.roles.push(role);
+  }
+  return [...byName.values()].map(({ name, roles }) => ({
+    name,
+    role: joinRoles(roles),
+    roles,
+  }));
+}
+
+function joinRoles(roles) {
+  if (!roles.length) return 'DPJP';
+  if (roles.length === 1) return roles[0];
+  const [first, ...rest] = roles;
+  const tail = rest.map(r => r.replace(/^DPJP\s+/i, ''));
+  return `${first} dan ${tail.join(' dan ')}`;
 }
 
 /* ── Render ─────────────────────────────────────────────────── */

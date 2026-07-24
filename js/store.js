@@ -199,7 +199,7 @@ export function blankEntry(patientId, template) {
   return {
     patientId,
     date: isoDate(),
-    reportType: template?.reportType || 'followup-harian',
+    reportType: template?.reportType || 'follow-up',
     templateId: template?.id || SEED_TEMPLATE_ID,
     templateVersion: template?.version || 1,
     sections: blankSections(template),

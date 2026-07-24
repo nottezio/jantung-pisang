@@ -16,26 +16,27 @@ export const SEED_SECTIONS = [
     key: 'note',
     label: 'Catatan',
     type: 'text',
-    // ONE BOX. The whole note is free text, the way a notes app
-    // works. The skeleton below is only a starting point — it is
-    // seed DATA, editable in Pengaturan, and the user can delete
-    // any of it.
-    //
-    // WhatsApp markup (*bold*) lives in the skeleton rather than in
-    // the render string, so what is typed is what is sent.
+    // ONE BOX. The skeleton below mirrors the house "ultimate"
+    // follow-up format: every section a ward patient might need,
+    // present from admission. Sections that do not apply are
+    // deleted rather than added, because deleting is faster than
+    // remembering, and a missing section is the error that costs.
     config: {
-      rows: 20,
+      rows: 28,
       default:
-        '*S:*\n- \n\n'
-        + '*Faktor risiko kardiovaskular:*\n'
-        + 'Riwayat Hipertensi \nRiwayat Diabetes Melitus \n'
-        + 'Riwayat Dislipidemia \nRiwayat Merokok \n\n'
-        + '*O:*\nCompos mentis\nTekanan Darah : \nNadi : \n'
-        + 'Pernapasan : \nSuhu : \nSpO2 : \n\n'
-        + '*A:*\n- \n\n'
-        + '*T:*\n- \n\n'
-        + '*P:*\n- \n\n'
-        + 'Mohon arahan dan koreksinya dokter. Terima kasih.',
+        '_Pasien dirawat dengan diagnosis _\n\n'
+        + '*S:*\n- \n\n'
+        + '*O:* E4M5V6, Compos mentis\n'
+        + 'TD : \nHR : \nRR : \nSuhu : \nSpO2 : \n\n'
+        + 'Anemis tidak ada, ikterus tidak ada, JVP R+2 cmH2O\n'
+        + 'BP vesikuler, ronkhi dan wheezing tidak ada\n'
+        + 'BJ I/II reguler, murmur tidak terdengar\n'
+        + 'Edema ekstremitas tidak ada, akral teraba hangat\n\n'
+        + '*Mohon izin kami assess dengan:*\n- \n\n'
+        + '*Mohon izin kami terapi dengan:*\n- \n\n'
+        + 'Selesai :\n- \n\n'
+        + '*Plan*\n- \n\n'
+        + 'Mohon arahan selanjutnya Dokter, terima kasih Dokter',
     },
   },
 ];
@@ -43,9 +44,9 @@ export const SEED_SECTIONS = [
 // The render string. Verified against the reference documents.
 // ⚠️ Blank lines here are load-bearing — they are what makes the
 //    WhatsApp message readable. Do not "tidy" them.
-export const SEED_RENDER = `{{salam}} dokter. Tabe, mohon izin melaporkan {{reportType.label}}{{#previousLocation}} dari *{{previousLocation.full}}* ke{{/previousLocation}}{{^previousLocation}} di{{/previousLocation}} *{{location.full}}* atas nama:
+export const SEED_RENDER = `{{salam}} Dokter, tabe dokter, mohon izin melaporkan {{reportType.label}}{{#source}} dari *{{source}}*{{/source}}{{#previousLocation}} dari *{{previousLocation.full}}* ke{{/previousLocation}}{{^previousLocation}} di{{/previousLocation}} *{{location.full}}* atas nama :
 
-*{{patient.name}} / {{patient.dob}} / {{patient.age}} tahun / RM {{patient.mrn}}*
+*{{patient.name}}/{{patient.dob}}/{{patient.age}} thn/RM {{patient.mrn}}*
 
 {{#dpjp}}
 _{{role}} : {{name}}_
@@ -54,11 +55,11 @@ _{{role}} : {{name}}_
 {{note}}`;
 
 export const REPORT_TYPES = [
-  { value: 'followup-harian',   label: 'follow up harian' },
-  { value: 'baru-poli',         label: 'pasien baru dari poli' },
-  { value: 'perpindahan',       label: 'pasien perpindahan' },
-  { value: 'konsul-kelayakan',  label: 'jawaban konsul kelayakan' },
-  { value: 'kjs-followup',      label: 'follow up KJS' },
+  { value: 'follow-up',        label: 'follow up pasien' },
+  { value: 'baru-poli',        label: 'pasien baru dari poli' },
+  { value: 'perpindahan',      label: 'pasien perpindahan' },
+  { value: 'konsul-kjs',       label: 'follow up pasien KJS' },
+  { value: 'konsul-kelayakan', label: 'jawaban konsul kelayakan' },
 ];
 
 export function seedTemplate(userId) {
@@ -67,7 +68,7 @@ export function seedTemplate(userId) {
     userId,
     profileId: 'pjt',
     name: 'Laporan klinis',
-    reportType: 'followup-harian',
+    reportType: 'follow-up',
     version: 1,
     sections: SEED_SECTIONS,
     render: SEED_RENDER,
@@ -84,6 +85,9 @@ export const DEFAULT_SETTINGS = {
   // Blank report formats for manual copying. Plain text, no
   // rendering. Seeded empty — the user pastes in their own.
   formats: [],
+
+  // Ordered checklists for recurring duties. Ticks reset daily.
+  reminders: [],
 
   // Workflow stages, as DATA so they can be renamed or trimmed in
   // Pengaturan without a code change. A profile with an empty array
@@ -172,6 +176,7 @@ export const DPJP_SEED = [
 
 export const DPJP_ROLES = [
   'DPJP Utama', 'DPJP Tindakan', 'DPJP Onsite', 'Pelimpahan Wewenang',
+  'DPJP Kardio', 'DPJP BTKV', 'DPJP GH', 'DPJP Anestesi',
 ];
 
 export const ENTRY_TYPES   = ['Baru-Poli', 'Perpindahan', 'Konsul'];
