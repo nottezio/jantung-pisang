@@ -28,22 +28,45 @@ export function navigate(next) {
   draw();
 }
 
+/**
+ * Route to a view.
+ *
+ * Views are async. Their promises MUST be caught here: an
+ * unhandled rejection leaves whatever loading message was on
+ * screen sitting there forever, with the real error visible only
+ * in the console. A view that fails should say so.
+ */
 function draw() {
-  // Settings dereferences ctx.template. Without this guard a failed
-  // load turns into an unhandled crash instead of a readable message.
   if (currentRoute.route === 'settings' && !ctx.template) {
     return showError(
       'Template belum termuat. Muat ulang halaman, lalu buka Pengaturan lagi.');
   }
-  switch (currentRoute.route) {
-    case 'patient':  return renderPatientDetail(currentRoute.id, ctx);
-    case 'settings': return renderSettings(ctx);
-    case 'manager':  return renderManager(ctx);
-    case 'reformat': return renderReformat(ctx);
-    case 'reminders': return renderReminders(ctx);
-    default:         return renderPatients(ctx);
+
+  let result;
+  try {
+    switch (currentRoute.route) {
+      case 'patient':   result = renderPatientDetail(currentRoute.id, ctx); break;
+      case 'settings':  result = renderSettings(ctx); break;
+      case 'manager':   result = renderManager(ctx); break;
+      case 'reformat':  result = renderReformat(ctx); break;
+      case 'reminders': result = renderReminders(ctx); break;
+      default:          result = renderPatients(ctx); break;
+    }
+  } catch (err) {
+    return reportViewFailure(err);
   }
+  if (result?.catch) result.catch(reportViewFailure);
+  return result;
 }
+
+function reportViewFailure(err) {
+  console.error('[view] failed:', err);
+  showError(
+    'Terjadi kesalahan saat menampilkan halaman ini.',
+    `${err?.code || err?.name || 'Error'}: ${err?.message || err}`,
+  );
+}
+
 
 async function loadContext() {
   ctx.templates = await ensureSeed().then(() => listTemplates());
@@ -130,6 +153,10 @@ function setSignedIn(on) {
 }
 
 /* ── Boot ───────────────────────────────────────────────────── */
+
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('[unhandled]', e.reason);
+});
 
 async function boot() {
   wireChrome();

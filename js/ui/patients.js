@@ -36,6 +36,10 @@ const GROUPS = {
   dpjp:   { label: 'DPJP',       of: (p) => (p.dpjp || []).find(d => d.name)?.name || 'Tanpa DPJP' },
 };
 
+// Held so patient cards can reach settings.stages without threading
+// ctx through every call site.
+let CTX = null;
+
 let sortKey = 'room';
 let groupKey = 'none';
 let showDischarged = false;
@@ -151,6 +155,30 @@ function resultNodes(all) {
     el('div', { class: 'card-grid' },
       ...buckets.get(k).slice().sort(SORTS[sortKey].fn).map(patientCard)),
   ));
+}
+
+function emptyState() {
+  if (showDischarged) {
+    return el('div', { class: 'empty' },
+      el('h3', { text: searchTerm ? 'Tidak ada yang cocok' : 'Arsip masih kosong' }),
+      el('p', { class: 'small',
+        text: 'Pasien pindah ke sini setelah diberi status kepulangan.' }),
+    );
+  }
+  if (searchTerm) {
+    return el('div', { class: 'empty' },
+      el('h3', { text: 'Tidak ada yang cocok' }),
+      el('p', { class: 'small', text: `Tidak ada pasien aktif untuk "${searchTerm}".` }),
+    );
+  }
+  return el('div', { class: 'empty' },
+    el('h3', { text: 'Belum ada pasien' }),
+    el('p', { class: 'small', text: 'Tambahkan pasien pertama untuk memulai.' }),
+    el('button', {
+      class: 'btn-primary', style: 'margin-top:12px',
+      onClick: () => openPatientForm(null, () => renderPatients()),
+    }, '+ Pasien baru'),
+  );
 }
 
 function patientCard(p) {
