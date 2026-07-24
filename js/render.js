@@ -7,7 +7,7 @@ import {
   computeAge, computeHariPerawatan, computeInitial, computeGreeting,
   formatDateID, isoDate, shiftDays, locationFull,
 } from './util.js';
-import { REPORT_TYPES } from './seed.js';
+
 
 // ⚠️ HARD REQUIREMENT #8 — THE OUTPUT TARGET IS PLAIN TEXT.
 //
@@ -54,15 +54,12 @@ export function buildContext({ patient, entry, template, settings, now = new Dat
     ? `${settings?.greetingPrefix || 'Selamat'} ${greeting}`
     : (settings?.salamText || 'Assalamualaikum');
 
-  const rt = REPORT_TYPES.find(r => r.value === (entry?.reportType || template?.reportType));
-
   const ctx = {
     salam,
     greeting,
     today: formatDateID(today, true),
     yesterday: formatDateID(shiftDays(today, -1), true),
     entryDate: formatDateID(entry?.date),
-    reportType: { value: rt?.value || '', label: rt?.label || '' },
 
     patient: {
       name: patient?.name || '',
@@ -192,18 +189,35 @@ export function validateTemplate(str) {
 
 /** Slots the render string references — used by Settings to warn
     about tags that no section or computed slot provides. */
+/**
+ * Tags the render string references that must resolve against the
+ * TOP-LEVEL context.
+ *
+ * Names inside a section are deliberately NOT reported. Within
+ * {{#dpjp}}…{{/dpjp}}, a bare {{role}} resolves against the loop
+ * item first and only then falls back to the parent context — so
+ * it is legitimately item-scoped and warning about it is a false
+ * positive. Only depth-0 names can be checked with confidence.
+ */
 export function referencedTags(str) {
   const tags = new Set();
   try {
-    const walk = (nodes) => {
+    const walk = (nodes, depth) => {
       for (const n of nodes) {
         const [type, name, , , children] = n;
-        if (['name', '#', '^', '&'].includes(type)) tags.add(String(name).split('.')[0]);
-        if (Array.isArray(children)) walk(children);
+        // Section names must resolve at the depth they appear, so
+        // they are collected; plain interpolations are only
+        // checkable at the top level.
+        const isSection = type === '#' || type === '^';
+        if (depth === 0 && ['name', '#', '^', '&'].includes(type)) {
+          tags.add(String(name).split('.')[0]);
+        }
+        if (Array.isArray(children)) walk(children, isSection ? depth + 1 : depth);
       }
     };
-    walk(Mustache.parse(String(str || '')));
+    walk(Mustache.parse(String(str || '')), 0);
   } catch { /* invalid template — Settings reports it separately */ }
   tags.delete('.');
   return [...tags];
 }
+

@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────
 import { el, clear, clone, computeAge, toast,
          parseFlexibleDate, toTypedDate } from '../util.js';
-import { BLANK_PATIENT, createPatient, updatePatient, listPatients } from '../store.js';
+import { BLANK_PATIENT, createPatient, updatePatient, listPatients, listDpjp } from '../store.js';
 import { openDialog } from './shell.js';
 import { DPJP_ROLES, ENTRY_TYPES, PHASES, DISPOSITIONS } from '../seed.js';
 
@@ -34,6 +34,11 @@ async function inferWardFloor() {
 
 export async function openPatientForm(existing, onSaved) {
   const isNew = !existing;
+  // The registry is the source of names. Typing a consultant's name
+  // by hand every admission is how "dr. Pendrik" and "dr Pendrik
+  // Tandean" end up as two different people in the same list.
+  let registry = [];
+  try { registry = await listDpjp(); } catch { /* offline: free text */ }
   const p = existing ? clone(existing) : BLANK_PATIENT();
 
   if (isNew) {
@@ -177,8 +182,22 @@ export async function openPatientForm(existing, onSaved) {
 
       dpjpWrap.append(el('div', { style: i ? 'margin-top:8px' : '' },
         el('div', { class: 'bullet-row' },
-          el('input', { value: row.name, placeholder: 'Nama DPJP',
-            onInput: (e) => { row.name = e.target.value; } }),
+          registry.length
+            ? el('select', {
+                style: 'flex:1',
+                onChange: (e) => { row.name = e.target.value; },
+              },
+                el('option', { value: '' }, '— pilih DPJP —'),
+                ...registry.map(d => el('option', {
+                  value: d.name, selected: row.name === d.name,
+                }, d.initial ? `${d.initial} · ${d.name}` : d.name)),
+                // Preserve a name typed before the registry existed.
+                row.name && !registry.some(d => d.name === row.name)
+                  ? el('option', { value: row.name, selected: true }, row.name)
+                  : null,
+              )
+            : el('input', { value: row.name, placeholder: 'Nama DPJP',
+                onInput: (e) => { row.name = e.target.value; } }),
           dpjpRows.length > 1
             ? el('button', { class: 'btn-sm btn-ghost btn-danger', type: 'button',
                 onClick: () => { dpjpRows.splice(i, 1); drawDpjp(); } }, '✕')
@@ -202,7 +221,9 @@ export async function openPatientForm(existing, onSaved) {
     el('label', { text: 'DPJP' }),
     dpjpWrap,
     el('div', { class: 'small faint',
-      text: 'Ketuk peran yang berlaku. Satu nama boleh punya lebih dari satu peran.' }),
+      text: registry.length
+        ? 'Ketuk peran yang berlaku. Satu nama boleh punya lebih dari satu peran.'
+        : 'Daftar DPJP belum diisi — buka Manajer → DPJP untuk mengisinya.' }),
   ));
 
   /* ═══ FOLDED: everything the daily report does not read ═══ */

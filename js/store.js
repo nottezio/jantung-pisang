@@ -15,7 +15,7 @@ import {
 } from './fb.js';
 import { clone, isoDate, uid } from './util.js';
 import { normalizeSections, blankSections } from './schema.js';
-import { seedTemplate, DEFAULT_SETTINGS, SEED_TEMPLATE_ID } from './seed.js';
+import { seedTemplates, DEFAULT_SETTINGS } from './seed.js';
 
 let USER_ID = null;
 export function setUser(u) { USER_ID = u?.uid || null; }
@@ -199,7 +199,6 @@ export function blankEntry(patientId, template) {
   return {
     patientId,
     date: isoDate(),
-    reportType: template?.reportType || 'follow-up',
     templateId: template?.id || SEED_TEMPLATE_ID,
     templateVersion: template?.version || 1,
     sections: blankSections(template),
@@ -220,7 +219,6 @@ export function carryForwardEntry(previous, template) {
   const base = blankEntry(previous.patientId, template);
   return {
     ...base,
-    reportType: previous.reportType || base.reportType,
     sections: normalizeSections(clone(previous.sections || {}), template),
     includedInvestigationIds: clone(previous.includedInvestigationIds || []),
     carriedFromId: previous.id,
@@ -332,7 +330,9 @@ export async function ensureSeed() {
   const userId = requireUser();
   const existing = await listTemplates();
   if (existing.length) return existing;
-  const tpl = seedTemplate(userId);
-  await setDoc(doc(db, 'templates', SEED_TEMPLATE_ID), outbound(tpl, { isNew: true }));
-  return [tpl];
+  const seeded = seedTemplates(userId);
+  for (const tpl of seeded) {
+    await setDoc(doc(db, 'templates', tpl.id), outbound(tpl, { isNew: true }));
+  }
+  return seeded;
 }

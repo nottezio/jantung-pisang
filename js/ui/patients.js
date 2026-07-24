@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 //  PATIENT LIST — the default view
 // ─────────────────────────────────────────────────────────────
-import { el, computeAge, computeHariPerawatan, compareNatural, locationFull, toast } from '../util.js';
+import { el, computeAge, computeHariPerawatan, compareNatural, locationFull, formatDateID, toast } from '../util.js';
 import { listPatients } from '../store.js';
 import { mount, loading, showError } from './shell.js';
 import { openPatientForm } from './patient-form.js';
@@ -28,10 +28,18 @@ const SORTS = {
   },
 };
 
-let sortKey = 'room';
-let showDischarged = false;
+const GROUPS = {
+  none:   { label: 'Tanpa grup', of: () => '' },
+  holder: { label: 'Pemegang',   of: (p) => p.assignedTo || 'Belum ditentukan' },
+  floor:  { label: 'Lantai',     of: (p) => p.location?.floor ? `Lantai ${p.location.floor}` : 'Tanpa lantai' },
+  room:   { label: 'Kamar',      of: (p) => p.location?.room ? `Kamar ${p.location.room}` : 'Tanpa kamar' },
+  dpjp:   { label: 'DPJP',       of: (p) => (p.dpjp || []).find(d => d.name)?.name || 'Tanpa DPJP' },
+};
 
-let CTX = null;
+let sortKey = 'room';
+let groupKey = 'none';
+let showDischarged = false;
+let searchTerm = '';
 
 export async function renderPatients(ctx) {
   if (ctx) CTX = ctx;
@@ -40,63 +48,109 @@ export async function renderPatients(ctx) {
   try {
     patients = await listPatients();
   } catch (err) {
-    return showError('Gagal memuat daftar pasien.', err?.message);
+    return showError('Gagal memuat daftar pasien.', `${err?.code || ''} ${err?.message || ''}`);
   }
   draw(patients);
+}
+
+function matches(p, q) {
+  if (!q) return true;
+  const hay = [p.name, p.mrn, p.mainDiagnosis, p.assignedTo,
+               locationFull(p.location), ...(p.dpjp || []).map(d => d.name)]
+    .filter(Boolean).join(' ').toLowerCase();
+  return hay.includes(q);
 }
 
 function draw(all) {
   const active = all.filter(p => !p.disposition);
   const gone   = all.filter(p => p.disposition);
-  const shown  = (showDischarged ? gone : active).slice().sort(SORTS[sortKey].fn);
+  const q = searchTerm.trim().toLowerCase();
+  const pool = (showDischarged ? gone : active).filter(p => matches(p, q));
 
   const toolbar = el('div', { class: 'toolbar' },
     el('select', {
       'aria-label': 'Urutkan',
       onChange: (e) => { sortKey = e.target.value; draw(all); },
-    }, ...Object.entries(SORTS).map(([k, s]) =>
-      el('option', { value: k, selected: k === sortKey }, `Urut: ${s.label}`))),
+    }, ...Object.entries(SORTS).map(([k, sd]) =>
+      el('option', { value: k, selected: k === sortKey }, `Urut: ${sd.label}`))),
+
+    el('select', {
+      'aria-label': 'Kelompokkan',
+      onChange: (e) => { groupKey = e.target.value; draw(all); },
+    }, ...Object.entries(GROUPS).map(([k, g]) =>
+      el('option', { value: k, selected: k === groupKey }, `Grup: ${g.label}`))),
 
     el('button', {
       class: 'btn-sm' + (showDischarged ? ' btn-primary' : ''),
       onClick: () => { showDischarged = !showDischarged; draw(all); },
-    }, showDischarged ? `Aktif (${active.length})` : `Sudah keluar (${gone.length})`),
+    }, showDischarged ? `Aktif (${active.length})` : `Arsip (${gone.length})`),
 
     el('span', { class: 'spacer' }),
 
-    el('button', {
+    !showDischarged ? el('button', {
       class: 'btn-primary',
       onClick: () => openPatientForm(null, () => renderPatients()),
-    }, '+ Pasien baru'),
+    }, '+ Pasien baru') : null,
   );
+
+  const search = el('input', {
+    type: 'search', value: searchTerm,
+    placeholder: 'Cari nama, RM, diagnosis, kamar, DPJP…',
+    style: 'margin-bottom:12px',
+    onInput: (e) => {
+      searchTerm = e.target.value;
+      const box = document.getElementById('ptResults');
+      if (box) box.replaceChildren(...resultNodes(all));
+    },
+  });
 
   const head = el('div', { style: 'margin-bottom:10px' },
-    el('div', { class: 'eyebrow', text: showDischarged ? 'Sudah keluar' : 'Pasien aktif' }),
-    el('h2', { text: `${shown.length} pasien` }),
+    el('div', { class: 'eyebrow', text: showDischarged ? 'Arsip' : 'Pasien aktif' }),
+    el('h2', { text: `${pool.length} pasien` }),
   );
 
-  const body = shown.length
-    ? el('div', { class: 'card-grid' }, ...shown.map(patientCard))
-    : emptyState();
-
-  mount(el('div', {}, toolbar, head, body));
+  mount(el('div', {}, toolbar, search, head,
+    el('div', { id: 'ptResults' }, ...resultNodes(all))));
 }
 
-function emptyState() {
-  if (showDischarged) {
-    return el('div', { class: 'empty' },
-      el('h3', { text: 'Belum ada pasien yang keluar' }),
-      el('p', { class: 'small', text: 'Pasien pindah ke sini setelah diberi status kepulangan.' }),
-    );
+function resultNodes(all) {
+  const active = all.filter(p => !p.disposition);
+  const gone   = all.filter(p => p.disposition);
+  const q = searchTerm.trim().toLowerCase();
+  const shown = (showDischarged ? gone : active).filter(p => matches(p, q));
+
+  if (!shown.length) return [emptyState()];
+
+  // Archive is grouped by discharge date regardless of the grouping
+  // choice: "when did they leave" is the only question asked of it.
+  const grouper = showDischarged
+    ? (p) => formatDateID(p.disposition?.date) || 'Tanpa tanggal'
+    : GROUPS[groupKey].of;
+
+  if (!showDischarged && groupKey === 'none') {
+    return [el('div', { class: 'card-grid' },
+      ...shown.slice().sort(SORTS[sortKey].fn).map(patientCard))];
   }
-  return el('div', { class: 'empty' },
-    el('h3', { text: 'Belum ada pasien' }),
-    el('p', { class: 'small', text: 'Tambahkan pasien pertama untuk memulai.' }),
-    el('button', {
-      class: 'btn-primary', style: 'margin-top:12px',
-      onClick: () => openPatientForm(null, () => renderPatients()),
-    }, '+ Pasien baru'),
-  );
+
+  const buckets = new Map();
+  for (const p of shown) {
+    const k = grouper(p) || '—';
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(p);
+  }
+
+  const keys = [...buckets.keys()].sort(showDischarged
+    ? (a, b) => b.localeCompare(a)          // newest discharges first
+    : compareNatural);
+
+  return keys.map(k => el('div', { style: 'margin-bottom:18px' },
+    el('div', { class: 'group-head' },
+      el('span', { text: k }),
+      el('span', { class: 'chip', text: String(buckets.get(k).length) }),
+    ),
+    el('div', { class: 'card-grid' },
+      ...buckets.get(k).slice().sort(SORTS[sortKey].fn).map(patientCard)),
+  ));
 }
 
 function patientCard(p) {

@@ -10,8 +10,7 @@ import { renderSignIn } from './ui/auth.js';
 import { renderPatients } from './ui/patients.js';
 import { renderPatientDetail } from './ui/patient-detail.js';
 import { renderSettings } from './ui/settings.js';
-import { openFormatLibrary } from './ui/formats.js';
-import { renderDpjpRegistry } from './ui/dpjp-registry.js';
+import { renderManager } from './ui/manager.js';
 import { renderReformat } from './ui/reformat.js';
 import { renderReminders } from './ui/reminders.js';
 
@@ -39,7 +38,7 @@ function draw() {
   switch (currentRoute.route) {
     case 'patient':  return renderPatientDetail(currentRoute.id, ctx);
     case 'settings': return renderSettings(ctx);
-    case 'dpjp':     return renderDpjpRegistry();
+    case 'manager':  return renderManager(ctx);
     case 'reformat': return renderReformat(ctx);
     case 'reminders': return renderReminders(ctx);
     default:         return renderPatients(ctx);
@@ -120,10 +119,6 @@ function wireChrome() {
 
   $$('#nav [data-route]').forEach(btn => {
     btn.addEventListener('click', () => navigate({ route: btn.dataset.route }));
-  });
-  $('#formatBtn').addEventListener('click', () => {
-    if (!ctx.settings) return;
-    openFormatLibrary(ctx);
   });
   $('#signOutBtn').addEventListener('click', async () => {
     await signOut(auth);

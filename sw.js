@@ -43,6 +43,7 @@ const SHELL = [
   './js/ui/stage.js',
   './js/ui/sidebyside.js',
   './js/ui/dpjp-registry.js',
+  './js/ui/manager.js',
   './js/ui/reformat.js',
   './js/ui/reminders.js',
 ];

@@ -11,22 +11,30 @@
 // ─────────────────────────────────────────────────────────────
 import { el, clear, clone, toast } from '../util.js';
 import { listDpjp, saveDpjp, deleteDpjp, BLANK_DPJP } from '../store.js';
-import { mount, loading, showError, openDialog, confirmDialog } from './shell.js';
+import { openDialog, confirmDialog } from './shell.js';
 import { REPORT_CHANNELS, DPJP_SEED } from '../seed.js';
-import { navigate } from '../app.js';
 
 const channelLabel = (v) => REPORT_CHANNELS.find(c => c.value === v)?.label || v;
 
-export async function renderDpjpRegistry() {
-  loading('Memuat daftar DPJP…');
+let HOST = null;
+
+/** Render the registry into a host element (used by the Manager tab). */
+export async function dpjpPanel(host) {
+  if (host) HOST = host;
+  if (!HOST) return;
+  HOST.replaceChildren(el('p', { class: 'muted', text: 'Memuat daftar DPJP…' }));
   let list;
   try {
     list = await listDpjp();
   } catch (err) {
-    return showError('Gagal memuat daftar DPJP.', `${err?.code || ''} ${err?.message || ''}`);
+    HOST.replaceChildren(el('div', { class: 'notice notice-warn' },
+      `Gagal memuat daftar DPJP: ${err?.code || err?.message || err}`));
+    return;
   }
   draw(list);
 }
+
+export const renderDpjpRegistry = () => dpjpPanel();
 
 function draw(list) {
   const toolbar = el('div', { class: 'toolbar' },
@@ -56,11 +64,6 @@ function draw(list) {
     }, '+ DPJP baru'),
   );
 
-  const back = el('button', {
-    class: 'btn-sm btn-ghost', style: 'margin-bottom:8px',
-    onClick: () => navigate({ route: 'patients' }),
-  }, '← Daftar pasien');
-
   const rows = el('div', { class: 'dpjp-list' }, ...list.map(dpjpRow));
   const search = el('input', {
     type: 'search', placeholder: 'Cari nama atau inisial…',
@@ -87,7 +90,7 @@ function draw(list) {
           + 'Cara lapor yang belum dikonfirmasi ditandai dengan "?".' }),
       );
 
-  mount(el('div', {}, back, toolbar, body));
+  HOST.replaceChildren(toolbar, body);
 }
 
 const CHANNEL_SHORT = {

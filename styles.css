@@ -571,3 +571,15 @@ dialog.sbs-dialog { width: min(1180px, calc(100vw - 24px)); }
   background: var(--accent-soft);
 }
 .rem-step.next .rem-num { color: var(--accent-deep); }
+
+/* ── Group headings ──────────────────────────────────────── */
+
+.group-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 2px 8px;
+  font-size: .78rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}

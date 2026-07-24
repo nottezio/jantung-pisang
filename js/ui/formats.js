@@ -16,8 +16,18 @@ import { openDialog, confirmDialog } from './shell.js';
 import { saveSettings } from '../store.js';
 import { formattedBox } from './formatted-box.js';
 
+/** Render the format library into a host element. */
+export function formatPanel(host, ctx) {
+  const inner = { body: host, foot: el('div'), close: () => {} };
+  buildFormatLibrary(inner, ctx, { embedded: true });
+}
+
 export function openFormatLibrary(ctx) {
-  const { body, foot, close } = openDialog('Format laporan', { wide: true });
+  buildFormatLibrary(openDialog('Format laporan', { wide: true }), ctx, {});
+}
+
+function buildFormatLibrary({ body, foot, close }, ctx, { embedded }) {
+  body.replaceChildren();
   const list = [...(ctx.settings?.formats || [])];
 
   const listPane = el('div');
@@ -178,9 +188,10 @@ export function openFormatLibrary(ctx) {
   drawList();
   body.append(
     el('p', { class: 'small faint', style: 'margin-top:0' },
-      'Format kosong untuk disalin manual. Tidak terhubung dengan data pasien.'),
+      'Format kosong untuk disalin manual — laporan MR, permintaan personel jaga, '
+      + 'dan sejenisnya. Tidak terhubung dengan data pasien.'),
     listPane,
     viewPane,
   );
-  foot.append(el('button', { onClick: close }, 'Tutup'));
+  if (!embedded) foot.append(el('button', { onClick: close }, 'Tutup'));
 }

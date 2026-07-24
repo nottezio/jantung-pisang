@@ -21,7 +21,8 @@ import { navigate } from '../app.js';
 // Slots provided by the engine rather than by a section.
 const COMPUTED_SLOTS = [
   'salam', 'greeting', 'today', 'yesterday', 'entryDate', 'reportType',
-  'patient', 'location', 'dpjp', 'source', 'referringDoctor',
+  'patient', 'location', 'previousLocation', 'transferDate',
+  'dpjp', 'source', 'referringDoctor',
   'hariPerawatan', 'admissionDate',
 ];
 

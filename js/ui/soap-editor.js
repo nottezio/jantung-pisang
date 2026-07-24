@@ -8,12 +8,12 @@
 //     of hard requirements #3 and #8.
 // ═══════════════════════════════════════════════════════════
 import { el, clone, formatDateID, isoDate, toast } from '../util.js';
-import { normalizeSections, orphanKeys } from '../schema.js';
+import { normalizeSections, orphanKeys, blankSections } from '../schema.js';
 import { renderSectionEditor } from '../sections/index.js';
 import { createEntry, updateEntry } from '../store.js';
 import { mount, showError } from './shell.js';
 import { openPreview } from './preview.js';
-import { REPORT_TYPES } from '../seed.js';
+
 import { renderPatientDetail } from './patient-detail.js';
 
 export function openSoapEditor({ patient, ctx, draft, existingId = null, onSaved }) {
@@ -37,11 +37,6 @@ export function openSoapEditor({ patient, ctx, draft, existingId = null, onSaved
     onInput: (e) => { entry.date = e.target.value; markDirty(); },
   });
 
-  const typeSelect = el('select', {
-    onChange: (e) => { entry.reportType = e.target.value; markDirty(); },
-  }, ...REPORT_TYPES.map(r =>
-    el('option', { value: r.value, selected: entry.reportType === r.value }, r.label)));
-
   const templateSelect = el('select', {
     onChange: (e) => {
       const next = ctx.templates.find(t => t.id === e.target.value);
@@ -50,6 +45,10 @@ export function openSoapEditor({ patient, ctx, draft, existingId = null, onSaved
       entry.templateId = next.id;
       entry.templateVersion = next.version || 1;
       entry.sections = normalizeSections(entry.sections, next);
+      // Switching format on an untouched entry should adopt the new
+      // skeleton; on an edited one it must not destroy typed text.
+      const blank = !String(entry.sections?.note || '').trim();
+      if (blank) entry.sections = blankSections(next);
       markDirty();
       drawSections();
     },
@@ -65,11 +64,13 @@ export function openSoapEditor({ patient, ctx, draft, existingId = null, onSaved
     ),
     el('div', { class: 'field-row' },
       el('div', { class: 'field' }, el('label', { text: 'Tanggal' }), dateInput),
-      el('div', { class: 'field' }, el('label', { text: 'Jenis laporan' }), typeSelect),
     ),
-    ctx.templates.length > 1
-      ? el('div', { class: 'field' }, el('label', { text: 'Template' }), templateSelect)
-      : null,
+    el('div', { class: 'field' },
+      el('label', { text: 'Format laporan' }),
+      templateSelect,
+      el('div', { class: 'small faint',
+        text: 'Menentukan kalimat pembuka, penutup, dan kerangka catatan.' }),
+    ),
     draft.carriedFromId && !existingId
       ? el('div', { class: 'notice notice-accent',
           text: 'Disalin dari entri sebelumnya, termasuk pilihan pemeriksaan. '
